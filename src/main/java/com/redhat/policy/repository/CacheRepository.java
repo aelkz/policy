@@ -36,14 +36,14 @@ public class CacheRepository {
 	private static final Logger LOGGER = Logger.getLogger(CacheRepository.class.getName());
 	private static final String JDG_USER = System.getenv("JDG_USER");
 	private static final  String JDG_PASSWORD = System.getenv("JDG_PASSWORD");
-	private static final  String JDG_PROTOCOL = System.getenv("JDG_PROTOCOL");
+	private static final  String JDG_PROTO = System.getenv("JDG_PROTO");
 	private static final  String JDG_HOST = System.getenv("JDG_HOST");
 	private static final  String JDG_CACHE_NAME = System.getenv("JDG_CACHE_NAME");
 	private static  String LIMIT_FOR_IP = System.getenv("LIMIT_FOR_IP");
 	private static int nlimitForIP = 0;
 	private static  String urlCallCache;
 	private static HttpClient createConnection() throws Exception{
-		  urlCallCache = JDG_PROTOCOL+"://"+JDG_HOST+"/rest/"+JDG_CACHE_NAME+"/";
+		  urlCallCache = JDG_PROTO+"://"+JDG_HOST+"/rest/"+JDG_CACHE_NAME+"/";
 	      HttpClientBuilder httpBuilder = HttpClientBuilder.create();
 	      SSLContext sslContext = new SSLContextBuilder().loadTrustMaterial(null, new TrustStrategy()
 	         {
