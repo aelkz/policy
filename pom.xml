@@ -1,33 +1,34 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0"
-	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>openbanking</groupId>
 	<artifactId>custom-policy-ip-rate-limit</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
-	
-	
+
+
 	<properties>
 		<jdk.version>1.8</jdk.version>
 		<camel.version>3.6.0</camel.version>
-	    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-	    <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
-	    <fuse.bom.version>7.6.0.fuse-sb2-760028-redhat-00001</fuse.bom.version>
-	  </properties>
-  <dependencyManagement>
-    <dependencies>
-      <dependency>
-        <groupId>org.jboss.redhat-fuse</groupId>
-        <artifactId>fuse-springboot-bom</artifactId>
-        <version>${fuse.bom.version}</version>
-        <type>pom</type>
-        <scope>import</scope>
-      </dependency>
-    </dependencies>
-  </dependencyManagement>
-	
-	
-	
+		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+		<project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
+		<fuse.bom.version>7.6.0.fuse-sb2-760028-redhat-00001</fuse.bom.version>
+	</properties>
+
+	<dependencyManagement>
+		<dependencies>
+			<dependency>
+				<groupId>org.jboss.redhat-fuse</groupId>
+				<artifactId>fuse-springboot-bom</artifactId>
+				<version>${fuse.bom.version}</version>
+				<type>pom</type>
+				<scope>import</scope>
+			</dependency>
+		</dependencies>
+	</dependencyManagement>
+
+
+
 
 	<build>
 		<finalName>custom-policy-ip-rate-limit</finalName>
@@ -77,44 +78,44 @@
 		</plugins>
 		<defaultGoal>clean compile package</defaultGoal>
 	</build>
-	
+
 	<repositories>
-    <repository>
-      <id>redhat-ga-repository</id>
-      <url>https://maven.repository.redhat.com/ga</url>
-      <releases />
-      <snapshots>
-        <enabled>false</enabled>
-      </snapshots>
-    </repository>
-    <repository>
-      <id>redhat-ea-repository</id>
-      <url>https://maven.repository.redhat.com/earlyaccess/all</url>
-      <releases />
-      <snapshots>
-        <enabled>false</enabled>
-      </snapshots>
-    </repository>
-  </repositories>
-  <pluginRepositories>
-    <pluginRepository>
-      <id>redhat-ga-repository</id>
-      <url>https://maven.repository.redhat.com/ga</url>
-      <releases />
-      <snapshots>
-        <enabled>false</enabled>
-      </snapshots>
-    </pluginRepository>
-    <pluginRepository>
-      <id>redhat-ea-repository</id>
-      <url>https://maven.repository.redhat.com/earlyaccess/all</url>
-      <releases />
-      <snapshots>
-        <enabled>false</enabled>
-      </snapshots>
-    </pluginRepository>
-  </pluginRepositories>
-  	<dependencies>
+		<repository>
+			<id>redhat-ga-repository</id>
+			<url>https://maven.repository.redhat.com/ga</url>
+			<releases />
+			<snapshots>
+				<enabled>false</enabled>
+			</snapshots>
+		</repository>
+		<repository>
+			<id>redhat-ea-repository</id>
+			<url>https://maven.repository.redhat.com/earlyaccess/all</url>
+			<releases />
+			<snapshots>
+				<enabled>false</enabled>
+			</snapshots>
+		</repository>
+	</repositories>
+	<pluginRepositories>
+		<pluginRepository>
+			<id>redhat-ga-repository</id>
+			<url>https://maven.repository.redhat.com/ga</url>
+			<releases />
+			<snapshots>
+				<enabled>false</enabled>
+			</snapshots>
+		</pluginRepository>
+		<pluginRepository>
+			<id>redhat-ea-repository</id>
+			<url>https://maven.repository.redhat.com/earlyaccess/all</url>
+			<releases />
+			<snapshots>
+				<enabled>false</enabled>
+			</snapshots>
+		</pluginRepository>
+	</pluginRepositories>
+	<dependencies>
 		<dependency>
 			<groupId>org.apache.camel</groupId>
 			<artifactId>camel-main</artifactId>
@@ -140,6 +141,13 @@
 			<artifactId>netty-handler</artifactId>
 			<version>4.1.53.Final</version>
 		</dependency>
+		
+		<dependency>
+		    <groupId>org.apache.camel</groupId>
+		    <artifactId>camel-netty</artifactId>
+		    <version>${camel.version}</version>
+		</dependency>
+		
 		<dependency>
 			<groupId>org.apache.camel</groupId>
 			<artifactId>camel-netty-http</artifactId>
@@ -153,9 +161,9 @@
 			<scope>runtime</scope>
 		</dependency>
 		<dependency>
-		    <groupId>org.apache.httpcomponents</groupId>
-		    <artifactId>httpclient</artifactId>
-		    <version>4.5.13</version> 
+			<groupId>org.apache.httpcomponents</groupId>
+			<artifactId>httpclient</artifactId>
+			<version>4.5.13</version>
 		</dependency>
 
 	</dependencies>

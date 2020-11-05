@@ -1,0 +1,103 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+  <groupId>openbanking</groupId>
+  <artifactId>custom-policy-ip-rate-limit</artifactId>
+  <version>0.0.1-SNAPSHOT</version>
+  <build>
+    <defaultGoal>clean compile package</defaultGoal>
+    <finalName>custom-policy-ip-rate-limit</finalName>
+    <plugins>
+      <plugin>
+        <artifactId>maven-eclipse-plugin</artifactId>
+        <version>2.9</version>
+        <configuration>
+          <downloadSources>true</downloadSources>
+          <downloadJavadocs>false</downloadJavadocs>
+        </configuration>
+      </plugin>
+      <plugin>
+        <artifactId>maven-compiler-plugin</artifactId>
+        <version>2.3.2</version>
+        <configuration>
+          <source>${jdk.version}</source>
+          <target>${jdk.version}</target>
+        </configuration>
+      </plugin>
+      <plugin>
+        <artifactId>maven-shade-plugin</artifactId>
+        <version>2.3</version>
+        <executions>
+          <execution>
+            <phase>package</phase>
+            <goals>
+              <goal>shade</goal>
+            </goals>
+            <configuration>
+              <transformers>
+                <transformer>
+                  <mainClass>com.redhat.policy.ProxyApp</mainClass>
+                </transformer>
+              </transformers>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+    </plugins>
+  </build>
+  <repositories>
+    <repository>
+      <releases />
+      <snapshots>
+        <enabled>false</enabled>
+      </snapshots>
+      <id>redhat-ga-repository</id>
+      <url>https://maven.repository.redhat.com/ga</url>
+    </repository>
+    <repository>
+      <releases />
+      <snapshots>
+        <enabled>false</enabled>
+      </snapshots>
+      <id>redhat-ea-repository</id>
+      <url>https://maven.repository.redhat.com/earlyaccess/all</url>
+    </repository>
+  </repositories>
+  <pluginRepositories>
+    <pluginRepository>
+      <releases />
+      <snapshots>
+        <enabled>false</enabled>
+      </snapshots>
+      <id>redhat-ga-repository</id>
+      <url>https://maven.repository.redhat.com/ga</url>
+    </pluginRepository>
+    <pluginRepository>
+      <releases />
+      <snapshots>
+        <enabled>false</enabled>
+      </snapshots>
+      <id>redhat-ea-repository</id>
+      <url>https://maven.repository.redhat.com/earlyaccess/all</url>
+    </pluginRepository>
+  </pluginRepositories>
+  <dependencyManagement>
+    <dependencies>
+      <dependency>
+        <groupId>org.jboss.redhat-fuse</groupId>
+        <artifactId>fuse-springboot-bom</artifactId>
+        <version>${fuse.bom.version}</version>
+        <type>pom</type>
+        <scope>import</scope>
+      </dependency>
+    </dependencies>
+  </dependencyManagement>
+  <properties>
+    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    <fuse.bom.version>7.6.0.fuse-sb2-760028-redhat-00001</fuse.bom.version>
+    <jdk.version>1.8</jdk.version>
+    <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
+    <camel.version>3.6.0</camel.version>
+  </properties>
+</project>
+
