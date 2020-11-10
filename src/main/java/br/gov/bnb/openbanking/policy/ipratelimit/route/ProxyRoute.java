@@ -42,16 +42,11 @@ public class ProxyRoute extends RouteBuilder {
     public void configure() throws Exception {
 		
         final RouteDefinition from;
-            from = from("netty-http:proxy://0.0.0.0:8080");
+            from = from("jetty:http://0.0.0.0:8080");
         from
         	.doTry()
             	.process(ProxyRoute::beforeRedirect)
-            	.toD("netty-http:http://localhost:9081/actuator/health}"
-            			+ "${headers." + Exchange.HTTP_SCHEME + "}://"
-            			+ "${headers." + Exchange.HTTP_HOST + "}:"
-            			+ "${headers." + Exchange.HTTP_PORT + "}"
-            			+ "${headers." + Exchange.HTTP_PATH + "}"
-            			)
+            	.to("http4://weather.yahoo.com/united-states?bridgeEndpoint=true&throwExceptionOnFailure=false&traceEnabled")
             	.process(ProxyRoute::afterRedirect)
 			.endDoTry()
             .doCatch(RateLimitException.class)
