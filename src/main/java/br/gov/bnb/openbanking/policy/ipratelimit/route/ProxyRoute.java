@@ -80,7 +80,15 @@ public class ProxyRoute extends RouteBuilder {
 		}
 
 			
-		LOGGER.info(">>> REQUEST HEADER REMOTE HOST <<< >>> " + req.getRemoteAddr() +" <<<");
+		LOGGER.info(">>> REQUEST REMOTE Addr <<< >>> " + req.getRemoteAddr() +" <<<");
+		LOGGER.info(">>> REQUEST REMOTE HOST <<< >>> " + req.getRemoteHost() +" <<<");
+		LOGGER.info(">>> REQUEST REMOTE Request URI <<< >>> " + req.getRequestURI() +" <<<");
+		LOGGER.info(">>> REQUEST REMOTE PORT <<< >>> " + req.getRemotePort() +" <<<");
+		LOGGER.info(">>> REQUEST REMOTE USER <<< >>> " + req.getRemoteUser() +" <<<");
+		LOGGER.info(">>> REQUEST PATH INFO <<< >>> " + req.getPathInfo() +" <<<");
+		LOGGER.info(">>> REQUEST PATH Translated <<< >>> " + req.getPathTranslated() +" <<<");
+		LOGGER.info(">>> REQUEST Server Name <<< >>> " + req.getServerName() +" <<<");
+		LOGGER.info(">>> REQUEST Server Port <<< >>> " + req.getServerPort() +" <<<");
 		
     	boolean isCanAccess = CacheRepository.isCanAccess(req.getRemoteAddr());
     	if(isCanAccess) {
