@@ -16,12 +16,13 @@
  */
 package br.gov.bnb.openbanking.policy.ipratelimit.route;
 
-import java.net.InetSocketAddress;
+import java.util.Enumeration;
 import java.util.Iterator;
 import java.util.Locale;
 import java.util.logging.Logger;
 
-import org.apache.camel.CamelContext;
+import javax.servlet.http.HttpServletRequest;
+
 import org.apache.camel.Exchange;
 import org.apache.camel.Message;
 import org.apache.camel.builder.RouteBuilder;
@@ -42,7 +43,7 @@ public class ProxyRoute extends RouteBuilder {
     public void configure() throws Exception {
 		
         final RouteDefinition from;
-            from = from("jetty:http://0.0.0.0:8080");
+            from = from("jetty:http://0.0.0.0:8080?useXForwardedForHeader=true");
         from
         	.doTry()
             	.process(ProxyRoute::beforeRedirect)
@@ -68,22 +69,24 @@ public class ProxyRoute extends RouteBuilder {
     		String key = (String) iName.next();
     		LOGGER.info(">>> [" +key+ "] - {"+message.getHeader(key)+"}");
     	}
-    	LOGGER.info(">>> <<<");
-    	InetSocketAddress remoteAddress = (InetSocketAddress)message.getHeader("CamelNettyRemoteAddress");
-    	LOGGER.info(">>> CLIENT OPETION IP  0 " + remoteAddress.toString());
-    	LOGGER.info(">>> CLIENT OPETION IP  1 " + remoteAddress.getAddress().getCanonicalHostName());
-    	LOGGER.info(">>> CLIENT OPETION IP  2 " + remoteAddress.getAddress().getHostAddress() );
-    	LOGGER.info(">>> CLIENT OPETION IP  3 " + remoteAddress.getAddress().getHostName() );
-    	LOGGER.info(">>> CLIENT OPETION IP  4 " + new String(remoteAddress.getAddress().getAddress())) ;
-    	//LOGGER.info(">>> CLIENT OPETION IP  3 " + remoteAddress.getAddress().getLocalHost().  );
-    	
-    	
-    	LOGGER.info(">>> CLIENT ADDRESS IP " + remoteAddress.getHostName());
-    	boolean isCanAccess = CacheRepository.isCanAccess(remoteAddress.getHostName());
+		LOGGER.info(">>> <<<");
+		HttpServletRequest req = exchange.getIn().getBody(HttpServletRequest.class);
+
+		LOGGER.info(">>> [request header values]");
+		Enumeration<String> headerNames = req.getHeaderNames();
+		while(headerNames.hasMoreElements()){
+			String element = headerNames.nextElement();
+    		LOGGER.info(">>> [" +element+ "] - {"+req.getHeader(element)+"}");
+		}
+
+			
+		LOGGER.info(">>> REQUEST HEADER REMOTE HOST <<< >>> " + req.getRemoteAddr() +" <<<");
+		
+    	boolean isCanAccess = CacheRepository.isCanAccess(req.getRemoteAddr());
     	if(isCanAccess) {
     		String host = (String)message.getHeader("Host");
         	String uri = (String)message.getHeader("CamelHttpUri");
-        	Integer port =  (Integer)message.getHeader("CamelHttpPort");
+        	Integer port =  req.getRemotePort();
         	message.setHeader(Exchange.HTTP_HOST, host);
         	message.setHeader(Exchange.HTTP_PORT, port);
         	message.setHeader(Exchange.HTTP_PATH, uri);
@@ -95,8 +98,8 @@ public class ProxyRoute extends RouteBuilder {
         	final String body = message.getBody(String.class);
             message.setBody(body.toUpperCase(Locale.US));
        }else {
-    	   LOGGER.info(">>>> RATE LIMIT REACHED FOR IP "+ remoteAddress.getHostName());
-   			throw new RateLimitException(">>>> RATE LIMIT REACHED FOR IP "+ remoteAddress.getHostName() );
+    	   LOGGER.info(">>>> RATE LIMIT REACHED FOR IP "+ req.getRemoteAddr());
+   			throw new RateLimitException(">>>> RATE LIMIT REACHED FOR IP "+ req.getRemoteAddr() );
        }
     }
     
