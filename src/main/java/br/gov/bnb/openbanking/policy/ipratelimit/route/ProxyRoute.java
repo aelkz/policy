@@ -14,48 +14,49 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.redhat.policy.route;
+package br.gov.bnb.openbanking.policy.ipratelimit.route;
 
 import java.net.InetSocketAddress;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.util.Date;
-import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Locale;
-import java.util.Map;
-import java.util.Set;
 import java.util.logging.Logger;
 
+import org.apache.camel.CamelContext;
 import org.apache.camel.Exchange;
 import org.apache.camel.Message;
 import org.apache.camel.builder.RouteBuilder;
 import org.apache.camel.model.RouteDefinition;
+import org.springframework.stereotype.Component;
 
-import com.redhat.policy.exception.RateLimitException;
-import com.redhat.policy.repository.CacheRepository;
+import br.gov.bnb.openbanking.policy.ipratelimit.exception.RateLimitException;
+import br.gov.bnb.openbanking.policy.ipratelimit.repository.CacheRepository;
 
+
+
+
+@Component("ip-rate-limit")
 public class ProxyRoute extends RouteBuilder {
 	private static final Logger LOGGER = Logger.getLogger(ProxyRoute.class.getName());
 	
     @Override
     public void configure() throws Exception {
-    	
+		
         final RouteDefinition from;
             from = from("netty-http:proxy://0.0.0.0:8080");
         from
         	.doTry()
             	.process(ProxyRoute::beforeRedirect)
-            	.toD("netty-http:"//http://backend-map-dev.apps.ocp.jdhlabs.com.br/localizacao"
+            	.toD("netty-http:http://localhost:9081/actuator/health}"
             			+ "${headers." + Exchange.HTTP_SCHEME + "}://"
             			+ "${headers." + Exchange.HTTP_HOST + "}:"
             			+ "${headers." + Exchange.HTTP_PORT + "}"
             			+ "${headers." + Exchange.HTTP_PATH + "}"
             			)
             	.process(ProxyRoute::afterRedirect)
-            .endDoTry()
+			.endDoTry()
             .doCatch(RateLimitException.class)
-            		.process(ProxyRoute::sendRateLimitErro)
+					.process(ProxyRoute::sendRateLimitErro)
+			.end()
             ;
         
     }

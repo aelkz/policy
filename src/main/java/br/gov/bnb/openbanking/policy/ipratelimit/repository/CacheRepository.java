@@ -1,5 +1,5 @@
-package com.redhat.policy.repository;
-import java.io.UnsupportedEncodingException;
+package br.gov.bnb.openbanking.policy.ipratelimit.repository;
+
 import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
 import java.util.logging.Logger;
@@ -28,8 +28,6 @@ import org.apache.http.impl.client.BasicCredentialsProvider;
 import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.http.impl.conn.PoolingHttpClientConnectionManager;
 import org.apache.http.util.EntityUtils;
-
-import com.redhat.policy.route.ProxyRoute;
 
 
 public class CacheRepository {

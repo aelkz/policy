@@ -1,175 +1,160 @@
-<project xmlns="http://maven.apache.org/POM/4.0.0"
-	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
-	<modelVersion>4.0.0</modelVersion>
-	<groupId>openbanking</groupId>
-	<artifactId>custom-policy-ip-rate-limit</artifactId>
-	<version>0.0.1-SNAPSHOT</version>
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+  <groupId>br.gov.bnb.openbanking.custompolicy</groupId>
+  <artifactId>ip-rate-limit</artifactId>
+  <version>0.0.1-SNAPSHOT</version>
+  <name>Fuse :: Boosters :: Rest HTTP</name>
+  <properties>
+    <java.version>1.8</java.version>
+    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
+    <fuse.bom.version>7.7.0.fuse-sb2-770010-redhat-00001</fuse.bom.version>
+    <version.springboot>2.1.6.RELEASE</version.springboot>
+    <camel.version>3.6.0</camel.version>
+    <!-- opentracing -->
+    <version.opentracing.spring.cloud.starter>0.5.9</version.opentracing.spring.cloud.starter>
+    <version.opentracing.spring.jaeger.starter>3.1.1.redhat-00009</version.opentracing.spring.jaeger.starter>
+    <version.opentracing.api>0.33.0</version.opentracing.api>
+    <version.jaeger.tracing>1.4.0</version.jaeger.tracing>
+    <!-- prometheus -->
+    <version.micrometer>1.5.6</version.micrometer>
 
-
-	<properties>
-		<jdk.version>1.8</jdk.version>
-		<camel.version>3.6.0</camel.version>
-		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-		<project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
-		<fuse.bom.version>7.6.0.fuse-sb2-760028-redhat-00001</fuse.bom.version>
-	</properties>
-
-	<dependencyManagement>
-		<dependencies>
-			<dependency>
-				<groupId>org.jboss.redhat-fuse</groupId>
-				<artifactId>fuse-springboot-bom</artifactId>
-				<version>${fuse.bom.version}</version>
-				<type>pom</type>
-				<scope>import</scope>
-			</dependency>
-		</dependencies>
-	</dependencyManagement>
-
-
-
-
-	<build>
-		<finalName>custom-policy-ip-rate-limit</finalName>
-		<plugins>
-			<plugin>
-				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-eclipse-plugin</artifactId>
-				<version>2.9</version>
-				<configuration>
-					<downloadSources>true</downloadSources>
-					<downloadJavadocs>false</downloadJavadocs>
-				</configuration>
-			</plugin>
-
-			<plugin>
-				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-compiler-plugin</artifactId>
-				<version>2.3.2</version>
-				<configuration>
-					<source>${jdk.version}</source>
-					<target>${jdk.version}</target>
-				</configuration>
-			</plugin>
-
-			<plugin>
-				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-shade-plugin</artifactId>
-				<version>2.3</version>
-				<executions>
-					<execution>
-						<phase>package</phase>
-						<goals>
-							<goal>shade</goal>
-						</goals>
-						<configuration>
-							<transformers>
-								<transformer
-									implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
-									<mainClass>com.redhat.policy.ProxyApp</mainClass>
-								</transformer>
-							</transformers>
-						</configuration>
-					</execution>
-				</executions>
-			</plugin>
-
-		</plugins>
-		<defaultGoal>clean compile package</defaultGoal>
-	</build>
-
-	<repositories>
-		<repository>
-			<id>redhat-ga-repository</id>
-			<url>https://maven.repository.redhat.com/ga</url>
-			<releases />
-			<snapshots>
-				<enabled>false</enabled>
-			</snapshots>
-		</repository>
-		<repository>
-			<id>redhat-ea-repository</id>
-			<url>https://maven.repository.redhat.com/earlyaccess/all</url>
-			<releases />
-			<snapshots>
-				<enabled>false</enabled>
-			</snapshots>
-		</repository>
-	</repositories>
-	<pluginRepositories>
-		<pluginRepository>
-			<id>redhat-ga-repository</id>
-			<url>https://maven.repository.redhat.com/ga</url>
-			<releases />
-			<snapshots>
-				<enabled>false</enabled>
-			</snapshots>
-		</pluginRepository>
-		<pluginRepository>
-			<id>redhat-ea-repository</id>
-			<url>https://maven.repository.redhat.com/earlyaccess/all</url>
-			<releases />
-			<snapshots>
-				<enabled>false</enabled>
-			</snapshots>
-		</pluginRepository>
-	</pluginRepositories>
-	<dependencies>
-		<dependency>
-			<groupId>org.apache.camel</groupId>
-			<artifactId>camel-main</artifactId>
-			<version>${camel.version}</version>
-		</dependency>
-		<dependency>
-			<groupId>org.apache.camel</groupId>
-			<artifactId>camel-core-engine</artifactId>
-			<version>${camel.version}</version>
-		</dependency>
-		<dependency>
-			<groupId>org.apache.camel</groupId>
-			<artifactId>camel-api</artifactId>
-			<version>${camel.version}</version>
-		</dependency>
-		<dependency>
-			<groupId>org.apache.camel</groupId>
-			<artifactId>camel-support</artifactId>
-			<version>${camel.version}</version>
-		</dependency>
-		<dependency>
-			<groupId>io.netty</groupId>
-			<artifactId>netty-handler</artifactId>
-			<version>4.1.53.Final</version>
-		</dependency>
-		
-		<dependency>
-		    <groupId>org.apache.camel</groupId>
-		    <artifactId>camel-netty</artifactId>
-		    <version>${camel.version}</version>
-		</dependency>
-		
-		<dependency>
+    <maven.compiler.plugin.version>3.8.1</maven.compiler.plugin.version>
+    <maven.min.version>3.5.4</maven.min.version>
+  </properties>
+  <dependencyManagement>
+    <dependencies>
+      <dependency>
+        <groupId>org.jboss.redhat-fuse</groupId>
+        <artifactId>fuse-springboot-bom</artifactId>
+        <version>${fuse.bom.version}</version>
+        <type>pom</type>
+        <scope>import</scope>
+      </dependency>
+      <dependency>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-dependencies</artifactId>
+        <version>${version.springboot}</version>
+        <type>pom</type>
+        <scope>import</scope>
+      </dependency>
+    </dependencies>
+  </dependencyManagement>
+  <dependencies>
+    <!-- spring-boot -->
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-web</artifactId>
+      <exclusions>
+        <exclusion>
+          <groupId>org.springframework.boot</groupId>
+          <artifactId>spring-boot-starter-tomcat</artifactId>
+        </exclusion>
+      </exclusions>
+    </dependency>
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-undertow</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-actuator</artifactId>
+    </dependency>
+    <!-- camel -->
+    <dependency>
+      <groupId>org.apache.camel</groupId>
+      <artifactId>camel-spring-boot-starter</artifactId>
+    </dependency>
+    <dependency>
 			<groupId>org.apache.camel</groupId>
 			<artifactId>camel-netty-http</artifactId>
 			<version>${camel.version}</version>
 			<scope>runtime</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.camel</groupId>
+      <artifactId>camel-netty</artifactId>
+      <version>${camel.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.camel</groupId>
+      <artifactId>camel-jaxb</artifactId>
+      <version>${camel.version}</version>
+    </dependency>
+    <dependency>
+			<groupId>io.netty</groupId>
+			<artifactId>netty-handler</artifactId>
+			<version>4.1.53.Final</version>
 		</dependency>
-		<dependency>
-			<groupId>ch.qos.logback</groupId>
-			<artifactId>logback-classic</artifactId>
-			<version>1.2.3</version>
-			<scope>runtime</scope>
-		</dependency>
-		<dependency>
-			<groupId>org.apache.httpcomponents</groupId>
-			<artifactId>httpclient</artifactId>
-			<version>4.5.13</version>
-		</dependency>
+    <!-- Complementary -->
+    <dependency>
+      <groupId>org.apache.httpcomponents</groupId>
+      <artifactId>httpclient</artifactId>
+      <version>4.5.13</version>
+    </dependency>
+  </dependencies>
+  <build>
+    <plugins>
+      <!-- Core plugins -->
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-compiler-plugin</artifactId>
+        <version>${maven.compiler.plugin.version}</version>
+        <configuration>
+          <source>${java.version}</source>
+          <target>${java.version}</target>
+        </configuration>
 
-	</dependencies>
-
-
-
-
-
+      </plugin>
+      <plugin>
+        <groupId>org.jboss.redhat-fuse</groupId>
+        <artifactId>spring-boot-maven-plugin</artifactId>
+        <version>${fuse.bom.version}</version>
+        <executions>
+          <execution>
+            <goals>
+              <goal>repackage</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
+    </plugins>
+  </build>
+  <repositories>
+    <repository>
+      <id>redhat-ga-repository</id>
+      <url>https://maven.repository.redhat.com/ga</url>
+      <releases />
+      <snapshots>
+        <enabled>false</enabled>
+      </snapshots>
+    </repository>
+    <repository>
+      <id>redhat-ea-repository</id>
+      <url>https://maven.repository.redhat.com/earlyaccess/all</url>
+      <releases />
+      <snapshots>
+        <enabled>false</enabled>
+      </snapshots>
+    </repository>
+  </repositories>
+  <pluginRepositories>
+    <pluginRepository>
+      <id>redhat-ga-repository</id>
+      <url>https://maven.repository.redhat.com/ga</url>
+      <releases />
+      <snapshots>
+        <enabled>false</enabled>
+      </snapshots>
+    </pluginRepository>
+    <pluginRepository>
+      <id>redhat-ea-repository</id>
+      <url>https://maven.repository.redhat.com/earlyaccess/all</url>
+      <releases />
+      <snapshots>
+        <enabled>false</enabled>
+      </snapshots>
+    </pluginRepository>
+  </pluginRepositories>
 </project>
