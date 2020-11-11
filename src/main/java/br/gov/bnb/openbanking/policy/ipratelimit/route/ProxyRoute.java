@@ -43,7 +43,7 @@ public class ProxyRoute extends RouteBuilder {
     public void configure() throws Exception {
 		
         final RouteDefinition from;
-            from = from("jetty:https://0.0.0.0:8443/test-https-uri?useXForwardedForHeader=true?keystore=/");
+            from = from("jetty:https://0.0.0.0:8443/test-https-uri?useXForwardedForHeader=true");
         from
         	.doTry()
             	.process(ProxyRoute::beforeRedirect)
