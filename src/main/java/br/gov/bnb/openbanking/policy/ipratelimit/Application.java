@@ -11,21 +11,5 @@ public class Application {
      */
     public static void main(String[] args) {
         SpringApplication.run(Application.class, args);
-
-        //final Main main = new Main();
-        //launch(main);
     }
-    /*
-    static void launch(final Main main) {
-        try {
-            main.bind("logging-handler", new LoggingHandler());
-            main.configure().addRoutesBuilder(new ProxyRoute());
-            main.run();
-        } catch (final Exception e) {
-            throw new ExceptionInInitializerError(e);
-        } finally {
-            main.stop();
-        }
-    } */
-
 }

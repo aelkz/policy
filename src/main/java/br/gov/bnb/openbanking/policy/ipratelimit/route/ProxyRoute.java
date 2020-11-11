@@ -43,11 +43,11 @@ public class ProxyRoute extends RouteBuilder {
     public void configure() throws Exception {
 		
         final RouteDefinition from;
-            from = from("jetty:http://0.0.0.0:8080?useXForwardedForHeader=true");
+            from = from("jetty:https://0.0.0.0:8080/teste-uri?useXForwardedForHeader=true");
         from
         	.doTry()
             	.process(ProxyRoute::beforeRedirect)
-            	.to("http4://weather.yahoo.com/united-states?bridgeEndpoint=true&throwExceptionOnFailure=false&traceEnabled")
+            	
             	.process(ProxyRoute::afterRedirect)
 			.endDoTry()
             .doCatch(RateLimitException.class)
@@ -92,12 +92,9 @@ public class ProxyRoute extends RouteBuilder {
 		
     	boolean isCanAccess = CacheRepository.isCanAccess(req.getRemoteAddr());
     	if(isCanAccess) {
-    		String host = (String)message.getHeader("Host");
-        	String uri = (String)message.getHeader("CamelHttpUri");
-        	Integer port =  req.getRemotePort();
-        	message.setHeader(Exchange.HTTP_HOST, host);
-        	message.setHeader(Exchange.HTTP_PORT, port);
-        	message.setHeader(Exchange.HTTP_PATH, uri);
+        	message.setHeader(Exchange.HTTP_HOST, req.getServerName());
+        	message.setHeader(Exchange.HTTP_PORT, req.getServerPort());
+        	message.setHeader(Exchange.HTTP_PATH, req.getPathInfo());
         	LOGGER.info(">>>> PROXY REWRITE TO "
         	+ message.getHeader(Exchange.HTTP_HOST)
         	+":"+message.getHeader(Exchange.HTTP_PORT)
