@@ -136,6 +136,8 @@ public class ProxyRoute extends RouteBuilder {
 	
 	private void configureJetty(){
 
+		LOGGER.info(this.getClass().getProtectionDomain().getCodeSource().getLocation()+"keystore/keystore.jks");
+
 		KeyStoreParameters ksp = new KeyStoreParameters();
 		ksp.setResource(this.getClass().getProtectionDomain().getCodeSource().getLocation()+"keystore/keystore.jks");
 		ksp.setPassword("F1wQNjxgsz8H4p9VtIamkLSBi");
