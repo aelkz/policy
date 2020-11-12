@@ -80,13 +80,13 @@ public class ProxyRoute extends RouteBuilder {
 		if(true) {
 			LOGGER.info("");
 
-			String host = (String) message.getHeader("Host");
-			String uri = (String) message.getHeader("CamelHttpUri");
+			String host = (String) message.getHeader("CamelHttpHost");
+			String path = (String) message.getHeader("CamelHttpPath");
 			Integer port = (Integer) message.getHeader("CamelHttpPort");
 
 			LOGGER.info("REDIRECTING TO HTTP_HOST: " + host);
 			LOGGER.info("REDIRECTING TO HTTP_PORT: " + port);
-			LOGGER.info("REDIRECTING TO HTTP_PATH: " + uri);
+			LOGGER.info("REDIRECTING TO HTTP_PATH: " + path);
 
 			if (host.indexOf(':') > -1) {
 				LOGGER.info("\ttrimming port from host variable: " + host);
@@ -96,7 +96,7 @@ public class ProxyRoute extends RouteBuilder {
 
 			message.setHeader(Exchange.HTTP_HOST, host);
 			message.setHeader(Exchange.HTTP_PORT, port);
-			message.setHeader(Exchange.HTTP_PATH, uri);
+			message.setHeader(Exchange.HTTP_PATH, path);
 
 			LOGGER.info("--------------------------------------------------------------------------------");
 			LOGGER.info("PROXY FORWARDING TO "
