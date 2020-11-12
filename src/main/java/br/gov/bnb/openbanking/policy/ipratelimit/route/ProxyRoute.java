@@ -1,34 +1,27 @@
 package br.gov.bnb.openbanking.policy.ipratelimit.route;
 
-import java.util.Enumeration;
+import java.net.InetSocketAddress;
+import java.nio.charset.StandardCharsets;
 import java.util.Iterator;
 import java.util.logging.Logger;
-
-import javax.servlet.http.HttpServletRequest;
-
 import org.apache.camel.Exchange;
 import org.apache.camel.Message;
 import org.apache.camel.builder.RouteBuilder;
-import org.apache.camel.component.jetty.JettyHttpComponent;
 import org.apache.camel.model.RouteDefinition;
-import org.apache.camel.util.jsse.KeyManagersParameters;
-import org.apache.camel.util.jsse.KeyStoreParameters;
-import org.apache.camel.util.jsse.SSLContextParameters;
 import org.springframework.stereotype.Component;
-
 import br.gov.bnb.openbanking.policy.ipratelimit.exception.RateLimitException;
 
 @Component("ip-rate-limit")
 public class ProxyRoute extends RouteBuilder {
 	private static final Logger LOGGER = Logger.getLogger(ProxyRoute.class.getName());
-	
+
     @Override
     public void configure() throws Exception {
-		
-		configureJetty();
 
-        final RouteDefinition from;
-        from = from("jetty://https://0.0.0.0:8443?useXForwardedForHeader=true&matchOnUriPrefix=true");
+		final RouteDefinition from;
+		// from = from("jetty://http://0.0.0.0:8080?useXForwardedForHeader=true&matchOnUriPrefix=true")
+		// from = from("jetty://https://0.0.0.0:8443?useXForwardedForHeader=true&matchOnUriPrefix=true");
+		from = from("netty4-http:proxy://0.0.0.0:8080");
 
 		from
 		.doTry()
@@ -69,27 +62,16 @@ public class ProxyRoute extends RouteBuilder {
     		LOGGER.info("\t[" +key+ "] - {"+message.getHeader(key)+"}");
     	}
 
-		HttpServletRequest req = exchange.getIn().getBody(HttpServletRequest.class);
+		// HttpServletRequest req = exchange.getIn().getBody(HttpServletRequest.class);
+		InetSocketAddress remoteAddress = (InetSocketAddress)message.getHeader("CamelNettyRemoteAddress");
 
 		LOGGER.info("");
-		LOGGER.info("request header values:");
-		Enumeration<String> headerNames = req.getHeaderNames();
-
-		while(headerNames.hasMoreElements()){
-			String element = headerNames.nextElement();
-    		LOGGER.info("\t[" +element+ "] - {"+req.getHeader(element)+"}");
-		}
-
-		LOGGER.info("");
-		LOGGER.info("REQUEST REMOTE Addr: " + req.getRemoteAddr());
-		LOGGER.info("REQUEST REMOTE HOST: " + req.getRemoteHost());
-		LOGGER.info("REQUEST REMOTE Request URI: " + req.getRequestURI());
-		LOGGER.info("REQUEST REMOTE PORT: " + req.getRemotePort());
-		LOGGER.info("REQUEST REMOTE USER: " + req.getRemoteUser());
-		LOGGER.info("REQUEST PATH INFO: " + req.getPathInfo());
-		LOGGER.info("REQUEST PATH Translated: " + req.getPathTranslated());
-		LOGGER.info("REQUEST Server Name: " + req.getServerName());
-		LOGGER.info("REQUEST Server Port: " + req.getServerPort());
+		LOGGER.info("REQUEST REMOTE ADDRESS: " + remoteAddress.toString());
+		LOGGER.info("REQUEST CANONICAL HOST NAME: " + remoteAddress.getAddress().getCanonicalHostName());
+		LOGGER.info("REQUEST HOST ADDRESS: " + remoteAddress.getAddress().getHostAddress());
+		LOGGER.info("REQUEST HOST NAME: " + remoteAddress.getAddress().getHostName());
+		LOGGER.info("REQUEST ADDRESS: " + new String(remoteAddress.getAddress().getAddress(), StandardCharsets.UTF_8));
+		LOGGER.info("REQUEST HOST NAME: " + remoteAddress.getHostName());
 
 		// DESCOMENTAR PARA HABILITAR O USO DO DATAGRID
     	// boolean isCanAccess = CacheRepository.isCanAccess(req.getRemoteAddr());
@@ -97,25 +79,35 @@ public class ProxyRoute extends RouteBuilder {
 
 		if(true) {
 			LOGGER.info("");
-			LOGGER.info("REDIRECTING TO HTTP_HOST " + req.getServerName());
-			LOGGER.info("REDIRECTING TO HTTP_PORT " + req.getServerPort());
-			LOGGER.info("REDIRECTING TO HTTP_PATH " + req.getPathInfo());
 
-        	message.setHeader(Exchange.HTTP_HOST, req.getServerName());
-        	message.setHeader(Exchange.HTTP_PORT, req.getServerPort());
-        	message.setHeader(Exchange.HTTP_PATH, req.getPathInfo());
+			String host = (String) message.getHeader("Host");
+			String uri = (String) message.getHeader("CamelHttpUri");
+			Integer port = (Integer) message.getHeader("CamelHttpPort");
 
-			LOGGER.info("");
+			LOGGER.info("REDIRECTING TO HTTP_HOST: " + host);
+			LOGGER.info("REDIRECTING TO HTTP_PORT: " + port);
+			LOGGER.info("REDIRECTING TO HTTP_PATH: " + uri);
+
+			if (host.indexOf(':') > -1) {
+				LOGGER.info("\ttrimming port from host variable: " + host);
+				host = 	remoteAddress.getHostName();
+				LOGGER.info("\tadjusted to: " + host);
+			}
+
+			message.setHeader(Exchange.HTTP_HOST, host);
+			message.setHeader(Exchange.HTTP_PORT, port);
+			message.setHeader(Exchange.HTTP_PATH, uri);
+
+			LOGGER.info("--------------------------------------------------------------------------------");
 			LOGGER.info("PROXY FORWARDING TO "
-        	+ message.getHeader(Exchange.HTTP_HOST)
-        	+":"+message.getHeader(Exchange.HTTP_PORT)
-        	+ message.getHeader(Exchange.HTTP_PATH));
-        	
-        	// final String body = message.getBody(String.class);
-			// message.setBody(body.toUpperCase(Locale.US));
+					+ message.getHeader(Exchange.HTTP_HOST)
+					+ ":" + message.getHeader(Exchange.HTTP_PORT)
+					+ message.getHeader(Exchange.HTTP_PATH));
+			LOGGER.info("--------------------------------------------------------------------------------");
+
        }else {
-    	   LOGGER.info("RATE LIMIT REACHED FOR IP "+ req.getRemoteAddr());
-    	   throw new RateLimitException("RATE LIMIT REACHED FOR IP "+ req.getRemoteAddr() );
+			LOGGER.info(">>>> RATE LIMIT REACHED FOR IP "+ remoteAddress.getHostName());
+			throw new RateLimitException(">>>> RATE LIMIT REACHED FOR IP "+ remoteAddress.getHostName() );
        }
     }
     
@@ -123,35 +115,12 @@ public class ProxyRoute extends RouteBuilder {
     	LOGGER.info("AFTER REDIRECT ");
     	// final Message message = exchange.getIn();
         // final String body = message.getBody(String.class);
-        // message.setBody(body.toUpperCase(Locale.US));
     }
     
     private static void sendRateLimitErro(final Exchange exchange) {
     	LOGGER.info("SEND COD ERROR 429");
     	final Message message = exchange.getIn();
     	message.setHeader(Exchange.HTTP_RESPONSE_CODE,429);
-        // final String body = message.getBody(String.class);
-        // message.setBody(body.toUpperCase(Locale.US));
-	}
-	
-	private void configureJetty(){
-
-		LOGGER.info(this.getClass().getProtectionDomain().getCodeSource().getLocation()+"keystore/keystore.jks");
-
-		KeyStoreParameters ksp = new KeyStoreParameters();
-		ksp.setResource(this.getClass().getProtectionDomain().getCodeSource().getLocation()+"keystore/keystore.jks");
-		ksp.setPassword("F1wQNjxgsz8H4p9VtIamkLSBi");
-
-		KeyManagersParameters kmp = new KeyManagersParameters();
-		kmp.setKeyStore(ksp);
-		kmp.setKeyPassword("F1wQNjxgsz8H4p9VtIamkLSBi");
-
-		SSLContextParameters scp = new SSLContextParameters();
-		scp.setKeyManagers(kmp);
-
-		JettyHttpComponent jettyComponent = getContext().getComponent("jetty", JettyHttpComponent.class);
-		jettyComponent.setSslContextParameters(scp);
-		
-	}
+    }
 
 }
