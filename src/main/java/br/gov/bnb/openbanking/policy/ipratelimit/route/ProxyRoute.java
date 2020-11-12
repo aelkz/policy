@@ -3,12 +3,19 @@ package br.gov.bnb.openbanking.policy.ipratelimit.route;
 import java.util.Enumeration;
 import java.util.Iterator;
 import java.util.logging.Logger;
+
 import javax.servlet.http.HttpServletRequest;
+
 import org.apache.camel.Exchange;
 import org.apache.camel.Message;
 import org.apache.camel.builder.RouteBuilder;
+import org.apache.camel.component.jetty.JettyHttpComponent;
 import org.apache.camel.model.RouteDefinition;
+import org.apache.camel.util.jsse.KeyManagersParameters;
+import org.apache.camel.util.jsse.KeyStoreParameters;
+import org.apache.camel.util.jsse.SSLContextParameters;
 import org.springframework.stereotype.Component;
+
 import br.gov.bnb.openbanking.policy.ipratelimit.exception.RateLimitException;
 
 @Component("ip-rate-limit")
@@ -18,8 +25,10 @@ public class ProxyRoute extends RouteBuilder {
     @Override
     public void configure() throws Exception {
 		
+		configureJetty();
+
         final RouteDefinition from;
-        from = from("jetty://http://0.0.0.0:8080?useXForwardedForHeader=true&matchOnUriPrefix=true");
+        from = from("jetty://https://0.0.0.0:8443?useXForwardedForHeader=true&matchOnUriPrefix=true");
 
 		from
 		.doTry()
@@ -123,6 +132,24 @@ public class ProxyRoute extends RouteBuilder {
     	message.setHeader(Exchange.HTTP_RESPONSE_CODE,429);
         // final String body = message.getBody(String.class);
         // message.setBody(body.toUpperCase(Locale.US));
-    }
+	}
+	
+	private void configureJetty(){
+
+		KeyStoreParameters ksp = new KeyStoreParameters();
+		ksp.setResource(this.getClass().getProtectionDomain().getCodeSource().getLocation()+"keystore/keystore.jks");
+		ksp.setPassword("F1wQNjxgsz8H4p9VtIamkLSBi");
+
+		KeyManagersParameters kmp = new KeyManagersParameters();
+		kmp.setKeyStore(ksp);
+		kmp.setKeyPassword("F1wQNjxgsz8H4p9VtIamkLSBi");
+
+		SSLContextParameters scp = new SSLContextParameters();
+		scp.setKeyManagers(kmp);
+
+		JettyHttpComponent jettyComponent = getContext().getComponent("jetty", JettyHttpComponent.class);
+		jettyComponent.setSslContextParameters(scp);
+		
+	}
 
 }
