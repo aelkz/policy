@@ -1,80 +1,74 @@
 package br.gov.bnb.openbanking.policy.ipratelimit.route;
 
-import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.nio.charset.StandardCharsets;
-import java.security.GeneralSecurityException;
-import java.security.KeyManagementException;
 import java.util.Iterator;
+import java.util.Locale;
 import java.util.logging.Logger;
-
-import javax.net.ssl.SSLContext;
 
 import org.apache.camel.Exchange;
 import org.apache.camel.Message;
 import org.apache.camel.builder.RouteBuilder;
-import org.apache.camel.model.RouteDefinition;
-import org.apache.camel.util.jsse.KeyManagersParameters;
-import org.apache.camel.util.jsse.KeyStoreParameters;
-import org.apache.camel.util.jsse.SSLContextParameters;
-import org.apache.http.conn.ssl.TrustSelfSignedStrategy;
-import org.apache.http.ssl.SSLContextBuilder;
-import org.springframework.context.annotation.Bean;
+import org.apache.camel.model.rest.RestBindingMode;
 import org.springframework.stereotype.Component;
 
-import br.gov.bnb.openbanking.policy.ipratelimit.exception.RateLimitException;
-
-@Component("ip-rate-limit")
+/**
+ * A simple Camel REST DSL route that implement the greetings service.
+ * 
+ */
+@Component
 public class ProxyRoute extends RouteBuilder {
 	private static final Logger LOGGER = Logger.getLogger(ProxyRoute.class.getName());
 
     @Override
     public void configure() throws Exception {
-
-		final RouteDefinition from;
-		// from = from("jetty://http://0.0.0.0:8080?useXForwardedForHeader=true&matchOnUriPrefix=true")
-		// from = from("jetty://https://0.0.0.0:8443?useXForwardedForHeader=true&matchOnUriPrefix=true");
-		from = from("netty4-http:proxy://0.0.0.0:8080");
-
-		from
-		.doTry()
+		
+		from("netty4-http:proxy://0.0.0.0:8090")
 			.process((e) -> {
-				System.out.println(">>> beforeRedirect method");
+				System.out.println(">>> BEFORE proxy redirect method");
 			})
-            .process(ProxyRoute::beforeRedirect)
+			.toD("http4:127.0.0.1:8080")
+			.process((e) -> {
+				System.out.println(">>> AFTER proxy redirect method");
+			});
+		
+		restConfiguration()
+			.component("netty4-http")
+			.bindingMode(RestBindingMode.json)
+			.port(8080);
+		 
+		rest()
+			// Mapear verbos POST, DELETE e PUT
+			.get("/")
+			.enableCORS(true)
+			.to("direct:start");
+		 
+		from("direct:start")
+			.process(ProxyRoute::beforeRedirect)	
+			.to("https4://www.postman-echo.com/get?test=123&bridgeEndpoint=true&throwExceptionOnFailure=false")
 				.process((e) -> {
-					System.out.println(">>> forwarding request to backend");
+					System.out.println(">>> request to backend forwarded");
 				})
-			.toD("netty4-http:"
-			    + "${header." + Exchange.HTTP_SCHEME + "}://"
-				+ "${header." + Exchange.HTTP_HOST + "}:"
-				+ "${header." + Exchange.HTTP_PORT + "}"
-				+ "${header." + Exchange.HTTP_PATH + "}"
-				+ "?ssl=true&sslContextParameters=#sslContextParameters"
-			)
-			.process((e) -> {
-				System.out.println(">>> afterRedirect method");
-			})
-            .process(ProxyRoute::afterRedirect)
-		.endDoTry()
-        	.doCatch(RateLimitException.class)
-			.process((e) -> {
-				System.out.println(">>> afterRedirect method");
-			})
-		    .process(ProxyRoute::sendRateLimitErro)
-		  .end();
-    }
+			.process(ProxyRoute::uppercase);
+	}	
+	
 
-    private static void beforeRedirect(final Exchange exchange) throws RateLimitException {
-    	LOGGER.info("BEFORE REDIRECT");
-    	final Message message = exchange.getIn();
-    	Iterator<String> iName = message.getHeaders().keySet().iterator();
+	public static void uppercase(final Exchange exchange) {
+		final Message message = exchange.getIn();
+		final String body = message.getBody(String.class);
+		message.setBody(body.toUpperCase(Locale.US));
+	}
+		
+	private static void beforeRedirect(final Exchange exchange) {
+		LOGGER.info("BEFORE REDIRECT");
+		final Message message = exchange.getIn();
+		Iterator<String> iName = message.getHeaders().keySet().iterator();
 
-    	LOGGER.info("header values:");
-    	while(iName.hasNext()) {
-    		String key = (String) iName.next();
-    		LOGGER.info("\t[" +key+ "] - {"+message.getHeader(key)+"}");
-    	}
+		LOGGER.info("header values:");
+		while(iName.hasNext()) {
+			String key = (String) iName.next();
+			LOGGER.info("\t[" +key+ "] - {"+message.getHeader(key)+"}");
+		}
 
 		// HttpServletRequest req = exchange.getIn().getBody(HttpServletRequest.class);
 		InetSocketAddress remoteAddress = (InetSocketAddress)message.getHeader("CamelNettyRemoteAddress");
@@ -88,8 +82,8 @@ public class ProxyRoute extends RouteBuilder {
 		LOGGER.info("REQUEST HOST NAME: " + remoteAddress.getHostName());
 
 		// DESCOMENTAR PARA HABILITAR O USO DO DATAGRID
-    	// boolean isCanAccess = CacheRepository.isCanAccess(req.getRemoteAddr());
-    	// if(isCanAccess) {
+		// boolean isCanAccess = CacheRepository.isCanAccess(req.getRemoteAddr());
+		// if(isCanAccess) {
 
 		if(true) {
 			LOGGER.info("");
@@ -104,16 +98,13 @@ public class ProxyRoute extends RouteBuilder {
 			LOGGER.info("REDIRECTING TO HTTP_PATH: " + path);
 			LOGGER.info("REDIRECTING TO HTTP_SCHEME: " + scheme);
 
+			/*
 			if (host.indexOf(':') > -1) {
 				LOGGER.info("\ttrimming port from host variable: " + host);
 				host = 	remoteAddress.getHostName();
 				LOGGER.info("\tadjusted to: " + host);
 			}
-
-			message.setHeader(Exchange.HTTP_HOST, host);
-			message.setHeader(Exchange.HTTP_PORT, port);
-			message.setHeader(Exchange.HTTP_PATH, path);
-			message.setHeader(Exchange.HTTP_SCHEME, scheme);
+			*/
 
 			LOGGER.info("--------------------------------------------------------------------------------");
 			LOGGER.info("PROXY FORWARDING TO "
@@ -122,44 +113,8 @@ public class ProxyRoute extends RouteBuilder {
 					+ ":" + message.getHeader(Exchange.HTTP_PORT)
 					+ message.getHeader(Exchange.HTTP_PATH));
 			LOGGER.info("--------------------------------------------------------------------------------");
+		}
 
-       }else {
-			LOGGER.info(">>>> RATE LIMIT REACHED FOR IP "+ remoteAddress.getHostName());
-			throw new RateLimitException(">>>> RATE LIMIT REACHED FOR IP "+ remoteAddress.getHostName() );
-       }
-    }
-    
-    private static void afterRedirect(final Exchange exchange) {
-    	LOGGER.info("AFTER REDIRECT ");
-    	// final Message message = exchange.getIn();
-        // final String body = message.getBody(String.class);
-    }
-    
-    private static void sendRateLimitErro(final Exchange exchange) {
-    	LOGGER.info("SEND COD ERROR 429");
-    	final Message message = exchange.getIn();
-    	message.setHeader(Exchange.HTTP_RESPONSE_CODE,429);
-    }
-
-	@Bean(name = "sslContextParameters")
-	public SSLContextParameters sslParameters() throws KeyManagementException, GeneralSecurityException, IOException {
-
-		KeyStoreParameters ksp = new KeyStoreParameters();
-		ksp.setResource(this.getClass().getProtectionDomain().getCodeSource().getLocation()+"keystore/truststore-postman.jks");
-		ksp.setPassword("password");
-
-		KeyManagersParameters kmp = new KeyManagersParameters();
-		kmp.setKeyStore(ksp);
-		kmp.setKeyPassword("password");
-
-		SSLContextParameters scp = new SSLContextParameters();
-		scp.setKeyManagers(kmp);
-
-		SSLContextBuilder builder = new SSLContextBuilder();
-		builder.loadTrustMaterial(new TrustSelfSignedStrategy());
-		SSLContext sslcontext = builder.build();
-		scp.createSSLContext().setDefault(sslcontext);
-
-		return scp;
 	}
+
 }
