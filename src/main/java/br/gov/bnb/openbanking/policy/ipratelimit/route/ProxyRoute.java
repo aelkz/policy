@@ -9,6 +9,7 @@ import java.util.logging.Logger;
 import org.apache.camel.Exchange;
 import org.apache.camel.Message;
 import org.apache.camel.builder.RouteBuilder;
+import org.apache.camel.model.dataformat.JsonLibrary;
 import org.apache.camel.model.rest.RestBindingMode;
 import org.springframework.stereotype.Component;
 
@@ -23,34 +24,31 @@ public class ProxyRoute extends RouteBuilder {
     @Override
     public void configure() throws Exception {
 		
-		from("netty4-http:proxy://0.0.0.0:8090")
+		from("netty4-http:proxy://0.0.0.0:8080/?bridgeEndpoint=true&throwExceptionOnFailure=false")
 			.process((e) -> {
-				System.out.println(">>> BEFORE proxy redirect method");
+				System.out.println("\n:: proxy received\n");
 			})
-			.toD("http4:127.0.0.1:8080")
+			// &httpClient.redirectsEnabled=true
+			
+			.to("direct:internal-redirect")
 			.process((e) -> {
-				System.out.println(">>> AFTER proxy redirect method");
+				System.out.println("\n:: route processing ended\n");
 			});
 		
-		restConfiguration()
-			.component("netty4-http")
-			.bindingMode(RestBindingMode.json)
-			.port(8080);
-		 
-		rest()
-			// Mapear verbos POST, DELETE e PUT
-			.get("/")
-			.enableCORS(true)
-			.to("direct:start");
-		 
-		from("direct:start")
-			.process(ProxyRoute::beforeRedirect)	
-			.to("https4://www.postman-echo.com/get?test=123&bridgeEndpoint=true&throwExceptionOnFailure=false")
-				.process((e) -> {
-					System.out.println(">>> request to backend forwarded");
-				})
-			.process(ProxyRoute::uppercase);
-	}	
+		from("direct:internal-redirect")
+			.process((e) -> {
+				System.out.println("\n:: internal-rest received\n");
+			})
+			.process(ProxyRoute::beforeRedirect)
+			.toD("https4://"
+                + "${headers." + Exchange.HTTP_HOST + "}:"
+				+ "${headers." + Exchange.HTTP_PORT + "}"
+				+ "?bridgeEndpoint=true&throwExceptionOnFailure=false")
+			.process(ProxyRoute::uppercase)
+			.process((e) -> {
+				System.out.println(":: request forwarded to backend");
+		});		
+	}
 	
 
 	public static void uppercase(final Exchange exchange) {
