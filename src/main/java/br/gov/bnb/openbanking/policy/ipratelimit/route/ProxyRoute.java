@@ -34,8 +34,10 @@ public class ProxyRoute extends RouteBuilder {
 		from("direct:internal-redirect").process((e) -> {
 			System.out.println("\n:: internal-rest received\n");
 		}).process(ProxyRoute::beforeRedirect)
-				.toD("https4://" + "${headers." + Exchange.HTTP_HOST + "}:" + "${headers." + Exchange.HTTP_PORT + "}"
-						+ "?bridgeEndpoint=true&throwExceptionOnFailure=false")
+				.toD("https4://" 
+					+ "s1wlbp10.capgv.intra.bnb:" 
+					+ "${headers." + Exchange.HTTP_PORT + "}"
+					+ "?bridgeEndpoint=true&throwExceptionOnFailure=false")
 				.process(ProxyRoute::uppercase).process((e) -> {
 					System.out.println(":: request forwarded to backend");
 				});
