@@ -9,14 +9,9 @@ import java.util.logging.Logger;
 import org.apache.camel.Exchange;
 import org.apache.camel.Message;
 import org.apache.camel.builder.RouteBuilder;
-import org.apache.camel.model.dataformat.JsonLibrary;
-import org.apache.camel.model.rest.RestBindingMode;
 import org.springframework.stereotype.Component;
 
-/**
- * A simple Camel REST DSL route that implement the greetings service.
- * 
- */
+
 @Component
 public class ProxyRoute extends RouteBuilder {
 	private static final Logger LOGGER = Logger.getLogger(ProxyRoute.class.getName());
@@ -28,8 +23,7 @@ public class ProxyRoute extends RouteBuilder {
 			.process((e) -> {
 				System.out.println("\n:: proxy received\n");
 			})
-			// &httpClient.redirectsEnabled=true
-			
+
 			.to("direct:internal-redirect")
 			.process((e) -> {
 				System.out.println("\n:: route processing ended\n");
