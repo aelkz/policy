@@ -105,8 +105,8 @@ public class ProxyRoute extends RouteBuilder {
 			 */
 
 			LOGGER.info("--------------------------------------------------------------------------------");
-			LOGGER.info("PROXY FORWARDING TO " + message.getHeader(Exchange.HTTP_SCHEME)
-					+ message.getHeader(Exchange.HTTP_HOST) + ":" + message.getHeader(Exchange.HTTP_PORT)
+			LOGGER.info("PROXY FORWARDING TO " + message.getHeader(Exchange.HTTP_SCHEME) + "://"
+					+ message.getHeader(Exchange.HTTP_HOST) + ":" + message.getHeader(Exchange.HTTP_PORT) + "/"
 					+ message.getHeader(Exchange.HTTP_PATH));
 			LOGGER.info("--------------------------------------------------------------------------------");
 		}
