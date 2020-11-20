@@ -1,8 +1,11 @@
 package br.gov.bnb.openbanking.policy.ipratelimit.route;
 
+import java.lang.reflect.Array;
 import java.net.InetSocketAddress;
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Locale;
 import java.util.logging.Logger;
 
@@ -13,39 +16,60 @@ import org.apache.camel.component.http4.HttpComponent;
 import org.apache.camel.util.jsse.KeyStoreParameters;
 import org.apache.camel.util.jsse.SSLContextParameters;
 import org.apache.camel.util.jsse.TrustManagersParameters;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 @Component
 public class ProxyRoute extends RouteBuilder {
 	private static final Logger LOGGER = Logger.getLogger(ProxyRoute.class.getName());
 
+	@Value("${custom.endpoint.route}")
+	private  String clientHost;
+	 
+	@Value("${custom.dev.env}")
+	private  Boolean env;
+	
+
 	@Override
 	public void configure() throws Exception {
-		configureHttp4();
+		if(env){
+			configureHttp4();
+		}
 
-		from("netty4-http:proxy://0.0.0.0:8080/?bridgeEndpoint=true&throwExceptionOnFailure=false").process((e) -> {
-			System.out.println("\n:: proxy received\n");
-		})
+		ArrayList<String> ipList = new ArrayList<String>();
+		ipList.add("10.6.128.23");
+		ipList.add("200.164.107.55");
+		
+		from("netty4-http:proxy://0.0.0.0:9090/?bridgeEndpoint=true&throwExceptionOnFailure=false")
+			.process((e) -> {
+				System.out.println("\n:: proxy received\n");
+			})
 
-				.to("direct:internal-redirect").process((e) -> {
-					System.out.println("\n:: route processing ended\n");
-				});
+			.to("direct:internal-redirect")
+			
+			.process((e) -> {
+				System.out.println("\n:: route processing ended\n");
+			});
 
-		from("direct:internal-redirect").process((e) -> {
-			System.out.println("\n:: internal-rest received\n");
-		}).process(ProxyRoute::beforeRedirect)
-				.toD("https4://" 
-					+ "s1wlbp10.capgv.intra.bnb:" 
-					+ "${headers." + Exchange.HTTP_PORT + "}"
-					+ "?bridgeEndpoint=true&throwExceptionOnFailure=false")
-				.process(ProxyRoute::uppercase).process((e) -> {
-					System.out.println(":: request forwarded to backend");
-				});
+		from("direct:internal-redirect")
+			.setHeader("X-Forwarded-For",constant(ipList))
+			.process((e) -> {
+				System.out.println("\n:: internal-redirect received\n");
+			})
+			.process(ProxyRoute::beforeRedirect)
+			.to("direct:getHitCount")
+			.toD("https4://" 
+				+  clientHost + ":" 
+				+ "${headers." + Exchange.HTTP_PORT + "}"
+				+ "?bridgeEndpoint=true&throwExceptionOnFailure=false")
+			.process(ProxyRoute::uppercase).process((e) -> {
+				System.out.println(":: request forwarded to backend");
+			});
 	}
 
 	private void configureHttp4() {
 		KeyStoreParameters ksp = new KeyStoreParameters();
-		ksp.setResource(this.getClass().getProtectionDomain().getCodeSource().getLocation()+"keystore/bnb.jks");
+		ksp.setResource(this.getClass().getProtectionDomain().getCodeSource().getLocation() + "keystore/bnb.jks");
 		ksp.setPassword("changeit");
 		TrustManagersParameters tmp = new TrustManagersParameters();
 		tmp.setKeyStore(ksp);
@@ -65,6 +89,9 @@ public class ProxyRoute extends RouteBuilder {
 		LOGGER.info("BEFORE REDIRECT");
 		final Message message = exchange.getIn();
 		Iterator<String> iName = message.getHeaders().keySet().iterator();
+
+		exchange.setProperty("ipList", exchange.getIn().getHeader("X-Forwarded-For"));
+		LOGGER.info(exchange.getProperty("ipList", List.class).get(0).toString());
 
 		LOGGER.info("header values:");
 		while (iName.hasNext()) {

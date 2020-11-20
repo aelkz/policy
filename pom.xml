@@ -56,7 +56,7 @@
     </dependency>
     <dependency>
       <groupId>org.apache.camel</groupId>
-      <artifactId>camel-jackson-starter</artifactId>
+      <artifactId>camel-infinispan-starter</artifactId>
     </dependency>
   </dependencies>
   <build>
