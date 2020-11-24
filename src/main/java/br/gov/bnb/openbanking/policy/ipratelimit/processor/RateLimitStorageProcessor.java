@@ -14,6 +14,10 @@ import br.gov.bnb.openbanking.policy.ipratelimit.dto.HitCountDTO;
 import br.gov.bnb.openbanking.policy.ipratelimit.dto.HitCountStorageDTO;
 import br.gov.bnb.openbanking.policy.ipratelimit.route.CacheRoute;
 
+/**
+ * Componente responável por gerenciar a quantidade de requisições dentro da janela tempo definida 
+ * @author <a href="mailto:nramalho@redhat.com">Natanael Ramalho</a>
+ */
 @Component
 public class RateLimitStorageProcessor implements Processor {
 
@@ -57,7 +61,7 @@ public class RateLimitStorageProcessor implements Processor {
         }
         LOGGER.info(">>> KEY :"+chave.getIp() + " HIT VALUES IN WINDOW BOUNDRY :" + chave.getTimestamps().size()); 
         hitCountDTO.setHitCount(chave.getTimestamps().size());
-        exchange.setProperty(CacheRoute.HIT_COUNT, hitCountDTO);
+        exchange.setProperty(CacheRoute.HIT_COUNT_TOTAL, hitCountDTO.getHitCount());
         exchange.getIn().setBody("");
         exchange.getIn().setHeader(CacheRoute.HIT_TIMESTAMP, chave.getTimestamps());
     }

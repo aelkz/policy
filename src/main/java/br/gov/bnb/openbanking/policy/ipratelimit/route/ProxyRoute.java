@@ -20,9 +20,16 @@ import org.springframework.stereotype.Component;
 
 import br.gov.bnb.openbanking.policy.ipratelimit.exception.RateLimitException;
 
+/**
+ * Configuração de rota que servirá como proxy para a custom policy
+ * @author <a href="mailto:nramalho@redhat.com">Natanael Ramalho</a>
+ */
 @Component
 public class ProxyRoute extends RouteBuilder {
+	
 	private static final Logger LOGGER = Logger.getLogger(ProxyRoute.class.getName());
+	
+	public static final String CLIENT_IP = "clientIp";
  
 	@Value("${custom.dev.env}")
 	private  Boolean env;
@@ -30,38 +37,40 @@ public class ProxyRoute extends RouteBuilder {
 
 	@Override
 	public void configure() throws Exception {
+		ArrayList<String> ipList = new ArrayList<String>();
 		if(!env){
 			configureHttp4();
+		}else{
+			ipList.add("10.6.128.23");
+			ipList.add("200.164.107.55");
 		}
-
-		ArrayList<String> ipList = new ArrayList<String>();
-		ipList.add("10.6.128.23");
-		ipList.add("200.164.107.55");
 		
 		from("netty4-http:proxy://0.0.0.0:9090/?bridgeEndpoint=true&throwExceptionOnFailure=false")
 			.to("direct:internal-redirect");
 
 		from("direct:internal-redirect")
 			.doTry()
+				// habilitar essa linha para teste em ambiente de desenvolvimento
 				.setHeader("X-Forwarded-For",constant(ipList))
+				.process(ProxyRoute::clientIpFilter)
 				.process(ProxyRoute::beforeRedirect)
 				.to("direct:getHitCount")
 				.wireTap("direct:incrementHitCount")
 				.toD("https4://" 
-					+  "{{custom.endpoint.route}}" + ":" 
+					+  "${headers." + Exchange.HTTP_HOST + "}" + ":" 
 					+ "${headers." + Exchange.HTTP_PORT + "}"
 					+ "?bridgeEndpoint=true&throwExceptionOnFailure=false")
 				.process(ProxyRoute::uppercase).process((e) -> {
-					System.out.println(":: request forwarded to backend");
+					LOGGER.info(">>> request forwarded to backend");
 				})
 				
 			.endDoTry()
 			.doCatch(RateLimitException.class)
 				.wireTap("direct:incrementHitCount")
-				.process((e) -> {
-					System.out.println(">>> afterRedirect method");
-				})
 				.process(ProxyRoute::sendRateLimitErro)
+				.process((e) -> {
+					LOGGER.info(">>> After Exception Method");
+				})
 		  	.end();
 	}
 
@@ -90,6 +99,14 @@ public class ProxyRoute extends RouteBuilder {
 		message.setBody("");
 	}
 
+	private static void clientIpFilter(final Exchange exchange){
+		ArrayList<String> ipList = (ArrayList<String>) exchange.getIn().getHeader("X-Forwarded-For");
+		if (ipList != null) {
+			exchange.setProperty(ProxyRoute.CLIENT_IP, ipList.get(0));
+		}else{
+			//TODO - Tratamentro de erro para o caso de não existir o parâmetro X-Forwarded-For no header
+		}
+	}
 
 	private static void beforeRedirect(final Exchange exchange) {
 		LOGGER.info("BEFORE REDIRECT");

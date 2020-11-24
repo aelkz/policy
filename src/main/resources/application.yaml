@@ -62,14 +62,12 @@ management:
 custom:
   policy: 
     ipratelimit:
-      maxhitcount: 10
+      maxhitcount: 40
       # Milliseconds time windows for requests
       timeWindow: 30000
   dev:
-    env: true
+    env: false
   endpoint:
-    #route: s1wlbp10.capgv.intra.bnb
-    route: www.postman-echo.com
   rhdg:
     cache:
       name: cache-ip-rate-limit

@@ -12,6 +12,10 @@ import br.gov.bnb.openbanking.policy.ipratelimit.dto.HitCountDTO;
 import br.gov.bnb.openbanking.policy.ipratelimit.exception.RateLimitException;
 import br.gov.bnb.openbanking.policy.ipratelimit.route.CacheRoute;
 
+/**
+ * Componente responsável por recuperar informações consolidadas de acessos por IP
+ * @author <a href="mailto:nramalho@redhat.com">Natanael Ramalho</a>
+ */
 @Component
 public class RateLimitProcessor implements Processor {
 
@@ -34,10 +38,10 @@ public class RateLimitProcessor implements Processor {
     
     try{
       if (hitCountDTO.getHitCount()==null) {
-        hitCountDTO.setHitCount(1);
-    } else if (hitCountDTO.getHitCount() >= maxHitCount){
-        throw new RateLimitException("RATE LIMIT REACHED FOR IP "+ hitCountDTO.getIp());
-    }
+          hitCountDTO.setHitCount(1);
+      } else if (hitCountDTO.getHitCount() >= maxHitCount){
+          throw new RateLimitException(RateLimitException.RATE_LIMIT_REACHED_MESSAGE + hitCountDTO.getIp());
+      }
     }finally{
         hitCountDTO.setHitCount(hitCountDTO.getHitCount()+1);
         LOGGER.info(">>>  IP: "+ hitCountDTO.getIp()+ " HIT COUNT :"+ hitCountDTO.getHitCount() + " TIMESTAMP :" +hitCountDTO.getTimeStamp());
