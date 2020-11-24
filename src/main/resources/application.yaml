@@ -73,7 +73,7 @@ custom:
       name: ${CACHE_NAME}
     health:
       check:
-        host: ${JDG_APP_NAME}.${JDG_SERVICE_NAMESPACE}.svc:9990
+        host: ${JDG_APP_NAME}.${JDG_SERVICE_NAMESPACE}.svc.cluster.local:9990
 
 
 # =============================================
@@ -87,14 +87,16 @@ infinispan:
   client:
     hotrod:
       auth_server_name:
-      auth_username: ${JDG_USERNAME}
-      auth_password: ${JDG_PASSWORD}
+      auth_username: 
+      auth_password: 
       use_auth: false
       connect_timeout: 5000
       socket_timeout: 5000
       max_retries: 3
       server_list: ${JDG_APP_NAME}.${JDG_SERVICE_NAMESPACE}.svc:11222
   hotrod:
-    trustStoreFileName: /var/run/secrets/kubernetes.io/serviceaccount/service-ca.crt
-    host: ${JDG_APP_NAME}.${JDG_SERVICE_NAMESPACE}.svc
+    trustStoreFileName: ${SERVICE_CA}
+    host: ${JDG_APP_NAME}.${JDG_SERVICE_NAMESPACE}.svc.cluster.local
     port: 11222
+    username: ${JDG_USERNAME}
+    password: ${JDG_PASSWORD}

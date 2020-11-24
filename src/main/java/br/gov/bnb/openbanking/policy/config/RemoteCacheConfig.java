@@ -28,10 +28,10 @@ public class RemoteCacheConfig {
  	@Value("${infinispan.hotrod.port}")
  	private Integer port;
  	
- 	@Value("${infinispan.client.hotrod.auth_username}")
+ 	@Value("${infinispan.hotrod.username}")
  	private String username;
 
- 	@Value("${infinispan.client.hotrod.auth_password}")
+ 	@Value("${infinispan.hotrod.password}")
  	private String password;
  	
  	@Value("${infinispan.hotrod.trustStoreFileName}")
