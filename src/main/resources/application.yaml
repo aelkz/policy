@@ -62,9 +62,9 @@ management:
 custom:
   policy: 
     ipratelimit:
-      maxhitcount: 40
+      maxhitcount: ${MAX_IP_HIT_COUNT}
       # Milliseconds time windows for requests
-      timeWindow: 30000
+      timeWindow: ${TIME_WINDOW}
   dev:
     env: false
   endpoint:
