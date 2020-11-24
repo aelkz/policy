@@ -28,15 +28,15 @@ public class RemoteCacheConfig {
  	@Value("${infinispan.hotrod.port}")
  	private Integer port;
  	
- 	@Value("${infinispan.hotrod.username}")
+ 	@Value("${infinispan.client.hotrod.auth_username}")
  	private String username;
 
- 	@Value("${infinispan.hotrod.password}")
+ 	@Value("${infinispan.client.hotrod.auth_password}")
  	private String password;
- 	
+ 	/*
  	@Value("${infinispan.hotrod.trustStoreFileName}")
  	private String trustStore;
- 	
+ 	*/
  	@Value("${infinispan.client.hotrod.socket_timeout}")
  	private  Integer socketTimeout;
  	
@@ -63,14 +63,15 @@ public class RemoteCacheConfig {
       * A abordagem recomendada é ter uma única instância do RemoteCacheManager para cada Java Virtual Machine (JVM).
       *
 	  */
-	  @Bean
+	  
+	  @Bean(name = "cacheContainer")
       public RemoteCacheManager remoteCacheManagerExample(){
 
       LOGGER.info("###### host: " + host);
       LOGGER.info("###### port: " + port);
       LOGGER.info("###### Cache: " + cacheName);
-      LOGGER.info("###### username: '" + username + "'");
-      LOGGER.info("###### password: '" + password + "'");
+      LOGGER.info("###### username: '" + username + "");
+      LOGGER.info("###### password: '" + password + "");
   	//LOGGER.info("###### trustStore: " + trustStore);
 
       ConfigurationBuilder builder =  new ConfigurationBuilder();

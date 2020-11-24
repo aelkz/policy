@@ -5,31 +5,46 @@ import java.util.logging.Logger;
 import org.apache.camel.Exchange;
 import org.apache.camel.Processor;
 import org.apache.camel.component.infinispan.InfinispanConstants;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Component;
 
 import br.gov.bnb.openbanking.policy.ipratelimit.dto.HitCountDTO;
 import br.gov.bnb.openbanking.policy.ipratelimit.exception.RateLimitException;
+import br.gov.bnb.openbanking.policy.ipratelimit.route.CacheRoute;
 
+@Component
 public class RateLimitProcessor implements Processor {
 
   private static final Logger LOGGER = Logger.getLogger(RateLimitProcessor.class.getName());
 
+  @Value("${custom.policy.ipratelimit.maxhitcount}")
+  private  Integer maxHitCount;
+  
   @Override
   public void process(Exchange exchange) throws RateLimitException {
-    LOGGER.info(">>> INICIO DE OPERAÇÕES COM DATA GRID");
+    HitCountDTO hitCountDTO = new HitCountDTO();
+    hitCountDTO.setTimeStamp(System.currentTimeMillis());
+
+    LOGGER.info(">>> INICIO DE OPERAÇÕES DE GET NO DATA GRID");
     LOGGER.info("Value of Key " + exchange.getIn().getHeader(InfinispanConstants.KEY) + " is "
         + exchange.getIn().getBody(String.class));
-
-    HitCountDTO hitCountDTO = new HitCountDTO();
+    
     hitCountDTO.setIp(exchange.getIn().getHeader(InfinispanConstants.KEY).toString());
     hitCountDTO.setHitCount(exchange.getIn().getBody(Integer.class));
-
-    if (hitCountDTO.getHitCount()==null) {
+    
+    try{
+      if (hitCountDTO.getHitCount()==null) {
         hitCountDTO.setHitCount(1);
-    } else{
-      hitCountDTO.setHitCount(hitCountDTO.getHitCount()+1);
+    } else if (hitCountDTO.getHitCount() >= maxHitCount){
+        throw new RateLimitException("RATE LIMIT REACHED FOR IP "+ hitCountDTO.getIp());
     }
-    LOGGER.info(">>>  IP: "+ hitCountDTO.getIp()+ "HIT COUNT :"+ hitCountDTO.getHitCount());
-    exchange.setProperty("HIT_COUNT",hitCountDTO);
+    }finally{
+        hitCountDTO.setHitCount(hitCountDTO.getHitCount()+1);
+        LOGGER.info(">>>  IP: "+ hitCountDTO.getIp()+ " HIT COUNT :"+ hitCountDTO.getHitCount() + " TIMESTAMP :" +hitCountDTO.getTimeStamp());
+        exchange.getIn().setBody("");
+        exchange.setProperty(CacheRoute.HIT_COUNT, hitCountDTO);
+    }
+    
   }
 
 }

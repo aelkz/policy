@@ -1,6 +1,5 @@
 package br.gov.bnb.openbanking.policy.ipratelimit.route;
 
-import java.lang.reflect.Array;
 import java.net.InetSocketAddress;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
@@ -19,20 +18,19 @@ import org.apache.camel.util.jsse.TrustManagersParameters;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
+import br.gov.bnb.openbanking.policy.ipratelimit.exception.RateLimitException;
+
 @Component
 public class ProxyRoute extends RouteBuilder {
 	private static final Logger LOGGER = Logger.getLogger(ProxyRoute.class.getName());
-
-	@Value("${custom.endpoint.route}")
-	private  String clientHost;
-	 
+ 
 	@Value("${custom.dev.env}")
 	private  Boolean env;
 	
 
 	@Override
 	public void configure() throws Exception {
-		if(env){
+		if(!env){
 			configureHttp4();
 		}
 
@@ -41,30 +39,30 @@ public class ProxyRoute extends RouteBuilder {
 		ipList.add("200.164.107.55");
 		
 		from("netty4-http:proxy://0.0.0.0:9090/?bridgeEndpoint=true&throwExceptionOnFailure=false")
-			.process((e) -> {
-				System.out.println("\n:: proxy received\n");
-			})
-
-			.to("direct:internal-redirect")
-			
-			.process((e) -> {
-				System.out.println("\n:: route processing ended\n");
-			});
+			.to("direct:internal-redirect");
 
 		from("direct:internal-redirect")
-			.setHeader("X-Forwarded-For",constant(ipList))
-			.process((e) -> {
-				System.out.println("\n:: internal-redirect received\n");
-			})
-			.process(ProxyRoute::beforeRedirect)
-			.to("direct:getHitCount")
-			.toD("https4://" 
-				+  clientHost + ":" 
-				+ "${headers." + Exchange.HTTP_PORT + "}"
-				+ "?bridgeEndpoint=true&throwExceptionOnFailure=false")
-			.process(ProxyRoute::uppercase).process((e) -> {
-				System.out.println(":: request forwarded to backend");
-			});
+			.doTry()
+				.setHeader("X-Forwarded-For",constant(ipList))
+				.process(ProxyRoute::beforeRedirect)
+				.to("direct:getHitCount")
+				.wireTap("direct:incrementHitCount")
+				.toD("https4://" 
+					+  "{{custom.endpoint.route}}" + ":" 
+					+ "${headers." + Exchange.HTTP_PORT + "}"
+					+ "?bridgeEndpoint=true&throwExceptionOnFailure=false")
+				.process(ProxyRoute::uppercase).process((e) -> {
+					System.out.println(":: request forwarded to backend");
+				})
+				
+			.endDoTry()
+			.doCatch(RateLimitException.class)
+				.wireTap("direct:incrementHitCount")
+				.process((e) -> {
+					System.out.println(">>> afterRedirect method");
+				})
+				.process(ProxyRoute::sendRateLimitErro)
+		  	.end();
 	}
 
 	private void configureHttp4() {
@@ -84,6 +82,14 @@ public class ProxyRoute extends RouteBuilder {
 		final String body = message.getBody(String.class);
 		message.setBody(body.toUpperCase(Locale.US));
 	}
+
+	private static void sendRateLimitErro(final Exchange exchange) {
+    	LOGGER.info("SEND COD ERROR 429");
+    	final Message message = exchange.getIn();
+		message.setHeader(Exchange.HTTP_RESPONSE_CODE,429);
+		message.setBody("");
+	}
+
 
 	private static void beforeRedirect(final Exchange exchange) {
 		LOGGER.info("BEFORE REDIRECT");
