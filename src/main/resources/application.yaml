@@ -70,10 +70,10 @@ custom:
   endpoint:
   rhdg:
     cache:
-      name: cache-ip-rate-limit
+      name: ${CACHE_NAME}
     health:
       check:
-        host: 127.0.0.1:9990
+        host: ${JDG_APP_NAME}.${JDG_SERVICE_NAMESPACE}.svc:9990
 
 
 # =============================================
@@ -87,14 +87,14 @@ infinispan:
   client:
     hotrod:
       auth_server_name:
-      auth_username:
-      auth_password:
+      auth_username: ${JDG_USERNAME}
+      auth_password: ${JDG_PASSWORD}
       use_auth: false
       connect_timeout: 5000
       socket_timeout: 5000
       max_retries: 3
-      server_list: ${APPLICATION_NAME}.${SERVICE_NAMESPACE}.svc:11222
+      server_list: ${JDG_APP_NAME}.${JDG_SERVICE_NAMESPACE}.svc:11222
   hotrod:
     trustStoreFileName: /var/run/secrets/kubernetes.io/serviceaccount/service-ca.crt
-    host: ${APPLICATION_NAME}.${SERVICE_NAMESPACE}.svc
+    host: ${JDG_APP_NAME}.${JDG_SERVICE_NAMESPACE}.svc
     port: 11222
