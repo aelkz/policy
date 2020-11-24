@@ -21,7 +21,7 @@ camel:
 # lets listen on all ports to ensure we can be invoked from the pod ip address
 server:
   address: 0.0.0.0
-  port: 8085
+  port: 8080
 
 
 endpoints:
@@ -93,7 +93,8 @@ infinispan:
       connect_timeout: 5000
       socket_timeout: 5000
       max_retries: 3
-      server_list: 127.0.0.1:11222
+      server_list: ${APPLICATION_NAME}.${SERVICE_NAMESPACE}.svc:11222
   hotrod:
-    host: 127.0.0.1
+    trustStoreFileName: /var/run/secrets/kubernetes.io/serviceaccount/service-ca.crt
+    host: ${APPLICATION_NAME}.${SERVICE_NAMESPACE}.svc
     port: 11222

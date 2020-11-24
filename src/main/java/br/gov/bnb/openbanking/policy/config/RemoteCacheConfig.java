@@ -33,10 +33,10 @@ public class RemoteCacheConfig {
 
  	@Value("${infinispan.client.hotrod.auth_password}")
  	private String password;
- 	/*
+ 	
  	@Value("${infinispan.hotrod.trustStoreFileName}")
  	private String trustStore;
- 	*/
+ 	
  	@Value("${infinispan.client.hotrod.socket_timeout}")
  	private  Integer socketTimeout;
  	
@@ -72,7 +72,7 @@ public class RemoteCacheConfig {
       LOGGER.info("###### Cache: " + cacheName);
       LOGGER.info("###### username: '" + username + "");
       LOGGER.info("###### password: '" + password + "");
-  	//LOGGER.info("###### trustStore: " + trustStore);
+  	  LOGGER.info("###### trustStore: " + trustStore);
 
       ConfigurationBuilder builder =  new ConfigurationBuilder();
 
@@ -82,13 +82,13 @@ public class RemoteCacheConfig {
           builder.security()
         // Authentication
         .authentication().enable()
-        //.username(username)
-        //.password(password)
-        .serverName("datagrid-service");
-        //.saslMechanism("DIGEST-MD5")		        
-        //.saslQop(SaslQop.AUTH)			
-        //.ssl()
-           //.trustStorePath(trustStore);		 		    
+        .username(username)
+        .password(password)
+        .serverName(host)
+        .saslMechanism("DIGEST-MD5")		        
+        .saslQop(SaslQop.AUTH)			
+        .ssl()
+           .trustStorePath(trustStore);		 		    
 	  } else {
 		  builder.clientIntelligence(ClientIntelligence.BASIC);
 	  }
