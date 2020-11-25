@@ -66,7 +66,7 @@ custom:
       # Milliseconds time windows for requests
       timeWindow: 60000
   dev:
-    env: false
+    env: true
   endpoint:
   rhdg:
     cache:
