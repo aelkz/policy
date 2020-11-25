@@ -1,4 +1,4 @@
-package br.gov.bnb.openbanking.policy.ipratelimit;
+package br.gov.bnb.openbanking.policy;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;

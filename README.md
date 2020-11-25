@@ -14,3 +14,6 @@ echo ${SECRETS_KEYSTORE_PASSWORD}
 ```
 curl -k -vvv http://localhost:9081/actuator/info -H 'Accept: application/json' -x "https://localhost:8443" --proxy-insecure
 ```
+
+
+keytool -import -trustcacerts -alias cax -file ca.crt -keystore truststore.jks -storepass password -noprompt  
