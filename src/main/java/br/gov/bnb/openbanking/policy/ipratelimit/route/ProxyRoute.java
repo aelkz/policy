@@ -51,7 +51,7 @@ public class ProxyRoute extends RouteBuilder {
 		from("direct:internal-redirect")
 			.doTry()
 				// habilitar essa linha para teste em ambiente de desenvolvimento
-				//.setHeader("X-Forwarded-For",constant(ipList))
+				.setHeader("X-Forwarded-For",constant(ipList))
 				.process(ProxyRoute::beforeRedirect)
 				.process(ProxyRoute::clientIpFilter)
 				.to("direct:getHitCount")
