@@ -70,7 +70,7 @@ custom:
   endpoint:
   rhdg:
     cache:
-      name: ip-rate-limit
+      name: cache-ip-rate-limit
     health:
       check:
         host: 127.0.0.1:9990
