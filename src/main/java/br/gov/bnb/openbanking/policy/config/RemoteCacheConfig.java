@@ -87,8 +87,8 @@ public class RemoteCacheConfig {
         .serverName(host)
         .saslMechanism("DIGEST-MD5")		        
         .saslQop(SaslQop.AUTH)			
-        .ssl()
-           .trustStorePath(trustStore);		 		    
+        //.ssl()
+           //.trustStorePath(trustStore);		 		    
 	  } else {
 		  builder.clientIntelligence(ClientIntelligence.BASIC);
 	  }
