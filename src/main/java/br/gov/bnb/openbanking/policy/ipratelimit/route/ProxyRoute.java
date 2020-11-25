@@ -45,7 +45,7 @@ public class ProxyRoute extends RouteBuilder {
 			ipList.add("200.164.107.55");
 		}
 		
-		from("netty4-http:proxy://0.0.0.0:9090/?bridgeEndpoint=true&throwExceptionOnFailure=false")
+		from("netty4-http:proxy://0.0.0.0:8443/?bridgeEndpoint=true&throwExceptionOnFailure=false")
 			.to("direct:internal-redirect");
 
 		from("direct:internal-redirect")
