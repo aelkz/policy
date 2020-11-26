@@ -44,15 +44,20 @@ public class ProxyRoute extends RouteBuilder {
 			ipList.add("10.6.128.23");
 			ipList.add("200.164.107.55");
 		}
+
+		from("netty4-http:proxy://0.0.0.0:8443?ssl=true&keyStoreFile=keystore.jks&passphrase=changeit&trustStoreFile=keystore.jks")
+			.to("direct:internal-redirect");
 		
-		from("netty4-http:proxy://0.0.0.0:8443/?bridgeEndpoint=true&throwExceptionOnFailure=false")
+		from("netty4-http:proxy://0.0.0.0:8080/?bridgeEndpoint=true&throwExceptionOnFailure=false")
 			.to("direct:internal-redirect");
 
 		from("direct:internal-redirect")
 			.doTry()
 				// habilitar essa linha para teste em ambiente de desenvolvimento
-				.setHeader("X-Forwarded-For",constant(ipList))
-				.process(ProxyRoute::beforeRedirect)
+				//.setHeader("X-Forwarded-For",constant(ipList))
+				//.process(ProxyRoute::beforeRedirect)
+				.process(ProxyRoute::saveHostHeader)
+            	.process(ProxyRoute::addCustomHeader)
 				.process(ProxyRoute::clientIpFilter)
 				.to("direct:getHitCount")
 				.wireTap("direct:incrementHitCount")
@@ -99,6 +104,22 @@ public class ProxyRoute extends RouteBuilder {
 		message.setBody("");
 	}
 
+	private static void addCustomHeader(final Exchange exchange) {
+        final Message message = exchange.getIn();
+        final String body = message.getBody(String.class);
+        System.out.println(">>> HEADERS: " + message.getHeaders());
+        message.setHeader("Fuse-Camel-Proxy", "Request was redirected to Camel netty4 proxy service");
+        message.setBody(body);
+        System.out.println(body);
+    }
+
+    private static void saveHostHeader(final Exchange exchange) {
+        final Message message = exchange.getIn();
+        System.out.println(">>> HEADERS: " + message.getHeaders());
+        String hostHeader = message.getHeader("Host", String.class);
+        message.setHeader("Source-Header", hostHeader);
+    }
+
 	private static void clientIpFilter(final Exchange exchange){
 		ArrayList<String> ipList = (ArrayList<String>) exchange.getIn().getHeader("X-Forwarded-For");
 		if (ipList != null) {
@@ -113,8 +134,8 @@ public class ProxyRoute extends RouteBuilder {
 		final Message message = exchange.getIn();
 		Iterator<String> iName = message.getHeaders().keySet().iterator();
 
-		exchange.setProperty("ipList", exchange.getIn().getHeader("X-Forwarded-For"));
-		LOGGER.info(exchange.getProperty("ipList", List.class).get(0).toString());
+		//exchange.setProperty("ipList", exchange.getIn().getHeader("X-Forwarded-For"));
+		//LOGGER.info(exchange.getProperty("ipList", List.class).get(0).toString());
 
 		LOGGER.info("header values:");
 		while (iName.hasNext()) {
