@@ -106,14 +106,22 @@ public class ProxyRoute extends RouteBuilder {
 
 	private static void addCustomHeader(final Exchange exchange) {
         final Message message = exchange.getIn();
-        final String body = message.getBody(String.class);
-        System.out.println(">>> HEADERS: " + message.getHeaders());
-        message.setHeader("Fuse-Camel-Proxy", "Request was redirected to Camel netty4 proxy service");
+		final String body = message.getBody(String.class);
+		ArrayList<String> ipList = (ArrayList<String>) exchange.getIn().getHeader("X-Forwarded-For");
+		for(String ip : ipList){
+			System.out.println(">>> ADD CUSTOM HEADER >>> IP: " + ip);
+		}
+		message.setHeader("Fuse-Camel-Proxy", "Request was redirected to Camel netty4 proxy service");
+		System.out.println(">>> HEADERS: " + message.getHeaders());
         message.setBody(body);
         System.out.println(body);
     }
 
     private static void saveHostHeader(final Exchange exchange) {
+		ArrayList<String> ipList = (ArrayList<String>) exchange.getIn().getHeader("X-Forwarded-For");
+		for(String ip : ipList){
+			System.out.println(">>> SAVE HEADER>>> IP: " + ip);
+		}
         final Message message = exchange.getIn();
         System.out.println(">>> HEADERS: " + message.getHeaders());
         String hostHeader = message.getHeader("Host", String.class);
