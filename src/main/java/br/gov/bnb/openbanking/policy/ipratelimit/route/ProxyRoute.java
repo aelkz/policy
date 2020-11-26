@@ -111,25 +111,25 @@ public class ProxyRoute extends RouteBuilder {
 		final String body = message.getBody(String.class);
 		ArrayList<String> ipList = (ArrayList<String>) exchange.getIn().getHeader("X-Forwarded-For");
 		System.out.println(">>> CUSTOM HEADER >>> IPLIST: " + ipList.toString());
-		String ips = new String();
+		String ips = new String("");
 		for(String ip : ipList){
 			System.out.println(">>> CUSTOM HEADER >>> IP: " + ip);
-			ips.concat(ip);
+			ips =  ips.concat(ip).concat(":");
 		}
 		System.out.println(">>> CUSTOM HEADER >>> IP: " + ips);
 		message.setHeader("Fuse-Camel-Proxy", "Request was redirected to Camel netty4 proxy service");
 		System.out.println(">>> CUSTOM HEADER: " + message.getHeaders());
         message.setBody(body);
         System.out.println(body);
-    }
-
+	}
+	
     private static void saveHostHeader(final Exchange exchange) {
 		ArrayList<String> ipList = (ArrayList<String>) exchange.getIn().getHeader("X-Forwarded-For");
 		System.out.println(">>> SAVE HEADER >>> IPLKIST: " + ipList.toString());
-		String ips = new String();
+		String ips = new String("");
 		for(String ip : ipList){
 			System.out.println(">>> SAVE HEADER>>> IP: " + ip);
-			ips.concat(ip);
+			ips =  ips.concat(ip).concat(":");
 		}
 		System.out.println(">>> SAVE HEADER >>> IP: " + ips);
         final Message message = exchange.getIn();
@@ -140,9 +140,9 @@ public class ProxyRoute extends RouteBuilder {
 
 	private static void clientIpFilter(final Exchange exchange){
 		ArrayList<String> ipList = (ArrayList<String>) exchange.getIn().getHeader("X-Forwarded-For");
-		String ips = new String();
+		String ips = new String("");
 		for(String ip : ipList){
-			ips.concat(ip);
+			ips =  ips.concat(ip).concat(":");
 		}
 		if (ipList == null) {
 			ips = ProxyRoute.EMPTY_XFORWARDEDFOR;
