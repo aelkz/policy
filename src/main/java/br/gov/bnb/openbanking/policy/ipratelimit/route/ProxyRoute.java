@@ -50,8 +50,8 @@ public class ProxyRoute extends RouteBuilder {
 		from("netty4-http:proxy://0.0.0.0:8443?ssl=true&keyStoreFile=keystore.jks&passphrase=changeit&trustStoreFile=keystore.jks")
 			.to("direct:internal-redirect");
 		
-		from("netty4-http:proxy://0.0.0.0:8080/?bridgeEndpoint=true&throwExceptionOnFailure=false")
-			.to("direct:internal-redirect");
+		//from("netty4-http:proxy://0.0.0.0:8080/?bridgeEndpoint=true&throwExceptionOnFailure=false")
+			//.to("direct:internal-redirect");
 
 		from("direct:internal-redirect")
 			.doTry()
