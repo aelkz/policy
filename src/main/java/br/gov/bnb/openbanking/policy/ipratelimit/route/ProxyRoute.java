@@ -30,6 +30,8 @@ public class ProxyRoute extends RouteBuilder {
 	private static final Logger LOGGER = Logger.getLogger(ProxyRoute.class.getName());
 	
 	public static final String CLIENT_IP = "clientIp";
+
+	public static final String EMPTY_XFORWARDEDFOR = "NO_IP";
  
 	@Value("${custom.dev.env}")
 	private  Boolean env;
@@ -108,9 +110,11 @@ public class ProxyRoute extends RouteBuilder {
         final Message message = exchange.getIn();
 		final String body = message.getBody(String.class);
 		ArrayList<String> ipList = (ArrayList<String>) exchange.getIn().getHeader("X-Forwarded-For");
+		String ips = new String();
 		for(String ip : ipList){
-			System.out.println(">>> ADD CUSTOM HEADER >>> IP: " + ip);
+			ips.concat(ip);
 		}
+		System.out.println(">>> SAVE HEADER>>> IP: " + ips);
 		message.setHeader("Fuse-Camel-Proxy", "Request was redirected to Camel netty4 proxy service");
 		System.out.println(">>> HEADERS: " + message.getHeaders());
         message.setBody(body);
@@ -119,9 +123,11 @@ public class ProxyRoute extends RouteBuilder {
 
     private static void saveHostHeader(final Exchange exchange) {
 		ArrayList<String> ipList = (ArrayList<String>) exchange.getIn().getHeader("X-Forwarded-For");
+		String ips = new String();
 		for(String ip : ipList){
-			System.out.println(">>> SAVE HEADER>>> IP: " + ip);
+			ips.concat(ip);
 		}
+		System.out.println(">>> SAVE HEADER>>> IP: " + ips);
         final Message message = exchange.getIn();
         System.out.println(">>> HEADERS: " + message.getHeaders());
         String hostHeader = message.getHeader("Host", String.class);
@@ -130,11 +136,15 @@ public class ProxyRoute extends RouteBuilder {
 
 	private static void clientIpFilter(final Exchange exchange){
 		ArrayList<String> ipList = (ArrayList<String>) exchange.getIn().getHeader("X-Forwarded-For");
-		if (ipList != null) {
-			exchange.setProperty(ProxyRoute.CLIENT_IP, ipList.get(0));
-		}else{
-			//TODO - Tratamentro de erro para o caso de não existir o parâmetro X-Forwarded-For no header
+		String ips = new String();
+		for(String ip : ipList){
+			ips.concat(ip);
 		}
+		if (ipList == null) {
+			ips = ProxyRoute.EMPTY_XFORWARDEDFOR;
+		}
+		exchange.setProperty(ProxyRoute.CLIENT_IP, ips);
+		
 	}
 
 	private static void beforeRedirect(final Exchange exchange) {
