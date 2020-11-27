@@ -44,8 +44,7 @@ public class ProxyRoute extends RouteBuilder {
         route.process(ProxyRoute::saveHostHeader)
                 .process(ProxyRoute::addCustomHeader)
                 .toD("netty4-http:"
-                        + "https://s1wlbp10.capgv.intra.bnb"
-                        + "${headers." + Exchange.HTTP_PATH + "}")
+                        + "https://s1wlbp10.capgv.intra.bnb:443")
                 .process(ProxyRoute::addCustomHeader);
     }
 
