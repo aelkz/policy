@@ -41,10 +41,12 @@ public class ProxyRoute extends RouteBuilder {
 
 		if(!env){
 			configureHttp4();
-		}
-		
-		from("netty4-http:proxy://0.0.0.0:8080/?bridgeEndpoint=true&throwExceptionOnFailure=false")
+		}else{
+			from("netty4-http:proxy://0.0.0.0:8080/?bridgeEndpoint=true&throwExceptionOnFailure=false")
 				.to("direct:internal-redirect");
+		}
+
+		
 
 		from("netty4-http:proxy://0.0.0.0:8443?ssl=true&keyStoreFile=keystore.jks&passphrase=changeit&trustStoreFile=keystore.jks")
 			.to("direct:internal-redirect");
@@ -58,10 +60,15 @@ public class ProxyRoute extends RouteBuilder {
 				.process(ProxyRoute::clientIpFilter)
 				//.to("direct:getHitCount")
 				//.wireTap("direct:incrementHitCount")
-				.toD("https4://" 
+				.toD("netty4-http:"
+                    + "${headers." + Exchange.HTTP_SCHEME + "}://"
+                    + "${headers." + Exchange.HTTP_HOST + "}:"
+                    + "${headers." + Exchange.HTTP_PORT + "}"
+                    + "${headers." + Exchange.HTTP_PATH + "}")
+				/*.toD("https4://" 
 					+  "${headers." + Exchange.HTTP_HOST + "}" + ":" 
 					+ "${headers." + Exchange.HTTP_PORT + "}"
-					+ "?bridgeEndpoint=true&throwExceptionOnFailure=false")
+					+ "?bridgeEndpoint=true&throwExceptionOnFailure=false")*/
 				.process(ProxyRoute::uppercase).process((e) -> {
 					LOGGER.info(">>> request forwarded to backend");
 				})
