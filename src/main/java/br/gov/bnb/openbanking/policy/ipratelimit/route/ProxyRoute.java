@@ -44,9 +44,7 @@ public class ProxyRoute extends RouteBuilder {
         route.process(ProxyRoute::saveHostHeader)
                 .process(ProxyRoute::addCustomHeader)
                 .toD("netty4-http:"
-                        + "${headers." + Exchange.HTTP_SCHEME + "}://"
-                        + "${headers." + Exchange.HTTP_HOST + "}:"
-                        + "${headers." + Exchange.HTTP_PORT + "}"
+                        + "https://s1wlbp10.capgv.intra.bnb"
                         + "${headers." + Exchange.HTTP_PATH + "}")
                 .process(ProxyRoute::addCustomHeader);
     }
@@ -61,7 +59,7 @@ public class ProxyRoute extends RouteBuilder {
 		
 		LOGGER.info("--------------------------------------------------------------------------------");
 		LOGGER.info("PROXY FORWARDING TO " + message.getHeader(Exchange.HTTP_SCHEME) + "://"
-				+ message.getHeader(Exchange.HTTP_HOST) + ":" + message.getHeader(Exchange.HTTP_PORT) + "/"
+				+ message.getHeader(Exchange.HTTP_HOST) + ":" + message.getHeader(Exchange.HTTP_PORT) 
 				+ message.getHeader(Exchange.HTTP_PATH));
 		LOGGER.info("--------------------------------------------------------------------------------");
     }
