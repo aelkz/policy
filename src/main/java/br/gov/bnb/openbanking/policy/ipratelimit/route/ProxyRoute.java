@@ -41,10 +41,10 @@ public class ProxyRoute extends RouteBuilder {
 
 		if(!env){
 			configureHttp4();
-		}else {
-			from("netty4-http:proxy://0.0.0.0:8080/?bridgeEndpoint=true&throwExceptionOnFailure=false")
-				.to("direct:internal-redirect");
 		}
+		
+		from("netty4-http:proxy://0.0.0.0:8080/?bridgeEndpoint=true&throwExceptionOnFailure=false")
+				.to("direct:internal-redirect");
 
 		from("netty4-http:proxy://0.0.0.0:8443?ssl=true&keyStoreFile=keystore.jks&passphrase=changeit&trustStoreFile=keystore.jks")
 			.to("direct:internal-redirect");
@@ -56,8 +56,8 @@ public class ProxyRoute extends RouteBuilder {
 				.process(ProxyRoute::saveHostHeader)
             	.process(ProxyRoute::addCustomHeader)
 				.process(ProxyRoute::clientIpFilter)
-				.to("direct:getHitCount")
-				.wireTap("direct:incrementHitCount")
+				//.to("direct:getHitCount")
+				//.wireTap("direct:incrementHitCount")
 				.toD("https4://" 
 					+  "${headers." + Exchange.HTTP_HOST + "}" + ":" 
 					+ "${headers." + Exchange.HTTP_PORT + "}"
@@ -68,7 +68,7 @@ public class ProxyRoute extends RouteBuilder {
 				
 			.endDoTry()
 			.doCatch(RateLimitException.class)
-				.wireTap("direct:incrementHitCount")
+				//.wireTap("direct:incrementHitCount")
 				.process(ProxyRoute::sendRateLimitErro)
 		  	.end();
 	}
