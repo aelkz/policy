@@ -10,6 +10,7 @@ import org.apache.camel.Message;
 import org.apache.camel.builder.RouteBuilder;
 import org.apache.camel.model.RouteDefinition;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.SpringApplication;
 import org.springframework.stereotype.Component;
 
 /**
@@ -28,8 +29,7 @@ public class ProxyRoute extends RouteBuilder {
 	@Value("${custom.dev.env}")
 	private  Boolean env;
 	
-	
-	@Override
+    @Override
     public void configure() throws Exception {
         final RouteDefinition route =
                 from("netty4-http:proxy://0.0.0.0:8088");
@@ -39,7 +39,6 @@ public class ProxyRoute extends RouteBuilder {
                 from("netty4-http:proxy://0.0.0.0:8443?ssl=true&keyStoreFile=keystore.jks&passphrase=changeit&trustStoreFile=keystore.jks");
         createRoute(routeTLS);
     }
-
     private void createRoute(RouteDefinition route) {
         route.process(ProxyRoute::saveHostHeader)
                 .process(ProxyRoute::addCustomHeader)
