@@ -61,9 +61,9 @@ public class ProxyRoute extends RouteBuilder {
 				//.to("direct:getHitCount")
 				//.wireTap("direct:incrementHitCount")
 				.toD("netty4-http:"
-                    + "${headers." + Exchange.HTTP_SCHEME + "}://"
-                    + "${headers." + Exchange.HTTP_HOST + "}:"
-                    + "${headers." + Exchange.HTTP_PORT + "}"
+                    + "https://"
+                    + "s1wlbp10.capgv.intra.bnb"+":" 
+                    + "443"
                     + "${headers." + Exchange.HTTP_PATH + "}")
 				/*.toD("https4://" 
 					+  "${headers." + Exchange.HTTP_HOST + "}" + ":" 
