@@ -80,15 +80,15 @@ public class ProxyRoute extends RouteBuilder {
 	}
 
 	private void setupSSLConext() throws Exception {
-
+		LOGGER.info(">>> CÓDIGO NOVO DO RAPHAEL <<<");
         KeyStoreParameters keyStoreParameters = new KeyStoreParameters();
         // Change this path to point to your truststore/keystore as jks files
         keyStoreParameters.setResource("keystore.jks");
-        keyStoreParameters.setPassword("password");
+        keyStoreParameters.setPassword("changeit");
 
         KeyManagersParameters keyManagersParameters = new KeyManagersParameters();
         keyManagersParameters.setKeyStore(keyStoreParameters);
-        keyManagersParameters.setKeyPassword("password");
+        keyManagersParameters.setKeyPassword("changeit");
 
         TrustManagersParameters trustManagersParameters = new TrustManagersParameters();
         trustManagersParameters.setKeyStore(keyStoreParameters);
