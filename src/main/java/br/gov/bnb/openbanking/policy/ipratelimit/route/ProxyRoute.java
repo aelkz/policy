@@ -44,9 +44,9 @@ public class ProxyRoute extends RouteBuilder {
 
 	@Override
 	public void configure() throws Exception {
-
+		setupSSLConext();
 		if(!env){
-			setupSSLConext();
+			//setupSSLConext();
 		}else {
 			from("netty4-http:proxy://0.0.0.0:8080/?bridgeEndpoint=true&throwExceptionOnFailure=false")
 				.to("direct:internal-redirect");
