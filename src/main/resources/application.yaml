@@ -3,7 +3,7 @@
 # ---------------------------------------------
 spring:
   application:
-    name: proxy #${OPENSHIFT_APP_NAME:openbanking-admin-api}
+    name: ${OPENSHIFT_APP_NAME:openbanking-proxy-policy}
   datasource:    
     initialization-mode: never
 
@@ -15,7 +15,7 @@ logging:
 # options from org.apache.camel.spring.boot.CamelConfigurationProperties can be configured here
 camel:
   springboot:
-    name: proxy # ${OPENSHIFT_APP_NAME:openbanking-admin-api}
+    name: ${OPENSHIFT_APP_NAME:openbanking-proxy-policy}
 
 
 # lets listen on all ports to ensure we can be invoked from the pod ip address
@@ -62,18 +62,18 @@ management:
 custom:
   policy: 
     ipratelimit:
-      maxhitcount: ${MAX_IP_HIT_COUNT}
+      maxhitcount: ${MAX_IP_HIT_COUNT:100}
       # Milliseconds time windows for requests
-      timeWindow: ${TIME_WINDOW}
+      timeWindow: ${TIME_WINDOW:60000}
   dev:
     env: false
   endpoint:
   rhdg:
     cache:
-      name: ${CACHE_NAME}
+      name: ${CACHE_NAME:default}
     health:
       check:
-        host: ${JDG_APP_NAME}.${JDG_SERVICE_NAMESPACE}.svc.cluster.local:9990
+        host: ${JDG_APP_NAME}.${JDG_SERVICE_NAMESPACE}.svc:9990
 
 
 # =============================================
@@ -95,8 +95,8 @@ infinispan:
       max_retries: 3
       server_list: ${JDG_APP_NAME}.${JDG_SERVICE_NAMESPACE}.svc:11222
   hotrod:
-    trustStoreFileName: ${SERVICE_CA}
-    host: ${JDG_APP_NAME}.${JDG_SERVICE_NAMESPACE}.svc.cluster.local
+    trustStoreFileName: ${SERVICE_CA:/}
+    host: ${JDG_APP_NAME}.${JDG_SERVICE_NAMESPACE}.svc
     port: 11222
-    username: ${JDG_USERNAME}
-    password: ${JDG_PASSWORD}
+    username: 
+    password: 
