@@ -9,14 +9,19 @@ import java.util.logging.Logger;
 
 import org.apache.camel.Exchange;
 import org.apache.camel.Message;
-import org.apache.camel.builder.RouteBuilder;
-import org.apache.camel.component.http4.HttpComponent;
-import org.apache.camel.util.jsse.KeyStoreParameters;
 import org.apache.camel.util.jsse.SSLContextParameters;
-import org.apache.camel.util.jsse.TrustManagersParameters;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.SpringApplication;
 import org.springframework.stereotype.Component;
+
+import org.apache.camel.CamelContext;
+import org.apache.camel.Endpoint;
+import org.apache.camel.builder.RouteBuilder;
+import org.apache.camel.component.http4.HttpComponent;
+import org.apache.camel.util.jsse.KeyManagersParameters;
+import org.apache.camel.util.jsse.KeyStoreParameters;
+import org.apache.camel.util.jsse.TrustManagersParameters;
+import org.apache.http.conn.ssl.AllowAllHostnameVerifier;
 
 import br.gov.bnb.openbanking.policy.ipratelimit.exception.RateLimitException;
 
@@ -41,7 +46,7 @@ public class ProxyRoute extends RouteBuilder {
 	public void configure() throws Exception {
 
 		if(!env){
-			configureHttp4();
+			setupSSLConext();
 		}else {
 			from("netty4-http:proxy://0.0.0.0:8080/?bridgeEndpoint=true&throwExceptionOnFailure=false")
 				.to("direct:internal-redirect");
@@ -74,6 +79,31 @@ public class ProxyRoute extends RouteBuilder {
 		  	.end();
 	}
 
+	private void setupSSLConext() throws Exception {
+
+        KeyStoreParameters keyStoreParameters = new KeyStoreParameters();
+        // Change this path to point to your truststore/keystore as jks files
+        keyStoreParameters.setResource("keystore.jks");
+        keyStoreParameters.setPassword("password");
+
+        KeyManagersParameters keyManagersParameters = new KeyManagersParameters();
+        keyManagersParameters.setKeyStore(keyStoreParameters);
+        keyManagersParameters.setKeyPassword("password");
+
+        TrustManagersParameters trustManagersParameters = new TrustManagersParameters();
+        trustManagersParameters.setKeyStore(keyStoreParameters);
+
+        SSLContextParameters sslContextParameters = new SSLContextParameters();
+        sslContextParameters.setKeyManagers(keyManagersParameters);
+        sslContextParameters.setTrustManagers(trustManagersParameters);
+
+        HttpComponent httpComponent = getContext().getComponent("https4", HttpComponent.class);
+        httpComponent.setSslContextParameters(sslContextParameters);
+        //This is important to make your cert skip CN/Hostname checks
+        httpComponent.setX509HostnameVerifier(new AllowAllHostnameVerifier());
+
+	}
+	
 	private void configureHttp4() {
 		KeyStoreParameters ksp = new KeyStoreParameters();
 		ksp.setResource("keystore.jks");
