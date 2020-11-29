@@ -100,7 +100,7 @@ public class ProxyRoute extends RouteBuilder {
         HttpComponent httpComponent = getContext().getComponent("https4", HttpComponent.class);
         httpComponent.setSslContextParameters(sslContextParameters);
         //This is important to make your cert skip CN/Hostname checks
-        httpComponent.setX509HostnameVerifier(new AllowAllHostnameVerifier());
+        //httpComponent.setX509HostnameVerifier(new AllowAllHostnameVerifier());
 
 	}
 	

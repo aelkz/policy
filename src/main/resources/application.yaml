@@ -7,6 +7,8 @@ spring:
   datasource:    
     initialization-mode: never
 
+debug: true
+
 logging:
   config: classpath:logback.xml
   level:
