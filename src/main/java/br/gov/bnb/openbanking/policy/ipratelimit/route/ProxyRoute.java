@@ -44,7 +44,7 @@ public class ProxyRoute extends RouteBuilder {
 
 	@Override
 	public void configure() throws Exception {
-		setupSSLConext();
+		configureHttp4();
 		if(!env){
 			//setupSSLConext();
 		}else {
@@ -114,6 +114,7 @@ public class ProxyRoute extends RouteBuilder {
 		scp.setTrustManagers(tmp);
 		HttpComponent httpComponent = getContext().getComponent("https4", HttpComponent.class);
 		httpComponent.setSslContextParameters(scp);
+		httpComponent.setX509HostnameVerifier(new AllowAllHostnameVerifier());
 	}
 
 	/**
