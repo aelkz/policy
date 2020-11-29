@@ -9,19 +9,15 @@ import java.util.logging.Logger;
 
 import org.apache.camel.Exchange;
 import org.apache.camel.Message;
-import org.apache.camel.util.jsse.SSLContextParameters;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.boot.SpringApplication;
-import org.springframework.stereotype.Component;
-
-import org.apache.camel.CamelContext;
-import org.apache.camel.Endpoint;
 import org.apache.camel.builder.RouteBuilder;
 import org.apache.camel.component.http4.HttpComponent;
 import org.apache.camel.util.jsse.KeyManagersParameters;
 import org.apache.camel.util.jsse.KeyStoreParameters;
+import org.apache.camel.util.jsse.SSLContextParameters;
 import org.apache.camel.util.jsse.TrustManagersParameters;
-import org.apache.http.conn.ssl.AllowAllHostnameVerifier;
+import org.apache.http.conn.ssl.NoopHostnameVerifier;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Component;
 
 import br.gov.bnb.openbanking.policy.ipratelimit.exception.RateLimitException;
 
@@ -114,7 +110,7 @@ public class ProxyRoute extends RouteBuilder {
 		scp.setTrustManagers(tmp);
 		HttpComponent httpComponent = getContext().getComponent("https4", HttpComponent.class);
 		httpComponent.setSslContextParameters(scp);
-		httpComponent.setX509HostnameVerifier(new AllowAllHostnameVerifier());
+		httpComponent.setX509HostnameVerifier(new NoopHostnameVerifier());
 	}
 
 	/**
