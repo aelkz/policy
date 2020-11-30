@@ -11,7 +11,6 @@ import org.apache.camel.Exchange;
 import org.apache.camel.Message;
 import org.apache.camel.builder.RouteBuilder;
 import org.apache.camel.component.http4.HttpComponent;
-import org.apache.camel.util.jsse.KeyManagersParameters;
 import org.apache.camel.util.jsse.KeyStoreParameters;
 import org.apache.camel.util.jsse.SSLContextParameters;
 import org.apache.camel.util.jsse.TrustManagersParameters;
@@ -40,9 +39,9 @@ public class ProxyRoute extends RouteBuilder {
 
 	@Override
 	public void configure() throws Exception {
-		configureHttp4();
+
 		if(!env){
-			//setupSSLConext();
+			configureHttp4();
 		}else {
 			from("netty4-http:proxy://0.0.0.0:8080/?bridgeEndpoint=true&throwExceptionOnFailure=false")
 				.to("direct:internal-redirect");
@@ -73,31 +72,6 @@ public class ProxyRoute extends RouteBuilder {
 				.wireTap("direct:incrementHitCount")
 				.process(ProxyRoute::sendRateLimitErro)
 		  	.end();
-	}
-
-	private void setupSSLConext() throws Exception {
-		LOGGER.info(">>> CÓDIGO NOVO DO RAPHAEL <<<");
-        KeyStoreParameters keyStoreParameters = new KeyStoreParameters();
-        // Change this path to point to your truststore/keystore as jks files
-        keyStoreParameters.setResource("keystore.jks");
-        keyStoreParameters.setPassword("changeit");
-
-        KeyManagersParameters keyManagersParameters = new KeyManagersParameters();
-        keyManagersParameters.setKeyStore(keyStoreParameters);
-        keyManagersParameters.setKeyPassword("changeit");
-
-        TrustManagersParameters trustManagersParameters = new TrustManagersParameters();
-        trustManagersParameters.setKeyStore(keyStoreParameters);
-
-        SSLContextParameters sslContextParameters = new SSLContextParameters();
-        sslContextParameters.setKeyManagers(keyManagersParameters);
-        sslContextParameters.setTrustManagers(trustManagersParameters);
-
-        HttpComponent httpComponent = getContext().getComponent("https4", HttpComponent.class);
-        httpComponent.setSslContextParameters(sslContextParameters);
-        //This is important to make your cert skip CN/Hostname checks
-        //httpComponent.setX509HostnameVerifier(new AllowAllHostnameVerifier());
-
 	}
 	
 	private void configureHttp4() {
@@ -162,6 +136,7 @@ public class ProxyRoute extends RouteBuilder {
 	
     private static void saveHostHeader(final Exchange exchange) {
 		ArrayList<String> ipList = (ArrayList<String>) exchange.getIn().getHeader("X-Forwarded-For");
+		System.out.println(ipList.getClass());
 		System.out.println(">>> SAVE HEADER >>> IPLKIST: " + ipList.toString());
 		String ips = new String("");
 		for(String ip : ipList){
@@ -174,7 +149,6 @@ public class ProxyRoute extends RouteBuilder {
         String hostHeader = message.getHeader("Host", String.class);
         message.setHeader("Source-Header", hostHeader);
     }
-
 	
 
 	@Deprecated
