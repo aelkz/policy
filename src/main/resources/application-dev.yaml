@@ -3,9 +3,15 @@
 # ---------------------------------------------
 spring:
   application:
-    name: proxy #${OPENSHIFT_APP_NAME:openbanking-admin-api}
-  datasource:    
+    name: ${OPENSHIFT_APP_NAME:openbanking-admin-api}
+  datasource:
     initialization-mode: never
+
+api:
+  title: ${OPENSHIFT_APP_NAME:openbanking-admin-api}
+  description: Banco do Nordeste - openbanking-admin-api
+  version: 1
+  hostname: ${OPENSHIFT_HOST_NAME:openbanking-admin-api.apps.openshift.com}
 
 logging:
   config: classpath:logback.xml
@@ -15,34 +21,21 @@ logging:
 # options from org.apache.camel.spring.boot.CamelConfigurationProperties can be configured here
 camel:
   springboot:
-    name: proxy # ${OPENSHIFT_APP_NAME:openbanking-admin-api}
-
+    name: ${OPENSHIFT_APP_NAME:openbanking-admin-api}
+    main-run-controller: true
+  component:
+    servlet:
+      mapping:
+        contextPath: /api/v${api.version}/*
+    jmxEnabled: true
 
 # lets listen on all ports to ensure we can be invoked from the pod ip address
 server:
   address: 0.0.0.0
-  port: 8081
-
-
-endpoints:
-  enabled: false
-  health:
-    enabled: true
-  actuator:
-    enabled: true
-  camelhealthcheck:
-    enabled: true
-  info:
-    enabled: true
-  metrics:
-    enabled: true
-  jmx:
-    enabled: true
-
+  port: 8085
 
 # lets use a different management port in case you need to listen to HTTP requests on 8080
 management:
-  port: 8090   
   endpoints:
     web:
       exposure:
@@ -52,35 +45,63 @@ management:
           - metrics
           - jvm
           - prometheus
-    metrics:
-      export:
-        prometheus:
-          enabled: true
+  metrics:
+    export:
+      prometheus:
+        enabled: true
 
+# =============================================
+# opentracing configurations
+# see: https://github.com/opentracing-contrib/java-spring-jaeger/blob/master/README.md
+# ---------------------------------------------
+opentracing:
+  jaeger:
+    enabled: true
+    service-name: ${OPENSHIFT_APP_NAME:openbanking-admin-api}
+    enable-b3-propagation: true
+    log-spans: true
+    const-sampler:
+      decision: true
+    udp-sender:
+      host: ${OPENSHIFT_JAEGER_HOST:localhost}
+      port: 6831
+    http-sender:
+      #url: http://jaeger-collector:14268/api/traces
+      url: ${OPENSHIFT_JAEGER_TRACE_API_URL:http://localhost:14268/api/traces}
+      # password:
+      # username:
+    expand-exception-logs: true
+    remote-reporter:
+      max-queue-size: 10000
+      flush-interval: 1000
+    tags:
+      - openbanking
+      - admin
+
+# =============================================
+# prometheus api parameters
+# ---------------------------------------------
+prometheus:
+  host: ${OPENSHIFT_PROMETHEUS_API_URL:"prometheus.microservices-openbanking.svc.cluster.local"}
+  port: 8080
+  status-path: ${OPENSHIFT_PROMETHEUS_STATUS_URL:prometheus.microservices-openbanking.svc.cluster.local:8080/health}
 
 
 custom:
   policy: 
     ipratelimit:
-      maxhitcount: 40
+      maxhitcount: ${MAX_IP_HIT_COUNT:10}
       # Milliseconds time windows for requests
-      timeWindow: 60000
+      timeWindow: ${TIME_WINDOW:30000}
   dev:
     env: true
   endpoint:
   rhdg:
     cache:
-      name: cache-ip-rate-limit
+      name: ${CACHE_NAME:default}
     health:
       check:
-        host: 127.0.0.1:9990
-
-
-# =============================================
-# opentracing configurations
-# see: 
-# ---------------------------------------------
-
+        host: ${JDG_APP_NAME:datagrid-fuse-policy}.${JDG_SERVICE_NAMESPACE:rh-datagrid-73}.svc:9990
 
 # Native Keys of API. With this keys is possible to send the properties file as parameter in ConfigurationBuilder. See (configurationBuilder.withProperties(file properties);)
 infinispan:
@@ -92,11 +113,11 @@ infinispan:
       use_auth: false
       connect_timeout: 5000
       socket_timeout: 5000
-      max_retries: 10
-      server_list: 127.0.0.1:11222
+      max_retries: 3
+      server_list: ${JDG_APP_NAME:datagrid-fuse-policy}.${JDG_SERVICE_NAMESPACE:rh-datagrid-73}.svc:11222
   hotrod:
-    trustStoreFileName: 
-    host: 127.0.0.1
+    trustStoreFileName: ${SERVICE_CA:/var/run/secrets/kubernetes.io/serviceaccount/service-ca.crt}
+    host: ${JDG_APP_NAME:datagrid-fuse-policy}.${JDG_SERVICE_NAMESPACE:rh-datagrid-73}.svc
     port: 11222
     username: 
     password: 

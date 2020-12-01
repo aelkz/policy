@@ -11,6 +11,7 @@ import org.apache.camel.Exchange;
 import org.apache.camel.Message;
 import org.apache.camel.builder.RouteBuilder;
 import org.apache.camel.component.http4.HttpComponent;
+import org.apache.camel.opentracing.ActiveSpanManager;
 import org.apache.camel.util.jsse.KeyStoreParameters;
 import org.apache.camel.util.jsse.SSLContextParameters;
 import org.apache.camel.util.jsse.TrustManagersParameters;
@@ -43,7 +44,7 @@ public class ProxyRoute extends RouteBuilder {
 		if(!env){
 			configureHttp4();
 		}else {
-			from("netty4-http:proxy://0.0.0.0:8080/?bridgeEndpoint=true&throwExceptionOnFailure=false")
+			from("netty4-http:proxy://0.0.0.0:8088/?bridgeEndpoint=true&throwExceptionOnFailure=false")
 				.to("direct:internal-redirect");
 		}
 
@@ -59,6 +60,17 @@ public class ProxyRoute extends RouteBuilder {
 				.process(ProxyRoute::clientIpFilter)
 				.to("direct:getHitCount")
 				.wireTap("direct:incrementHitCount")
+				.process(exchange -> {
+					//ActiveSpanManager.getSpan(exchange);
+                    //save original body for route (optional)
+                    String originalBody = exchange.getIn().getBody(String.class);
+                    exchange.setProperty("BACKUP_MESSAGE", originalBody);
+
+                    Span span = tracer.getTracer().buildSpan("additional-span").start();
+                    span.setTag("openbanking-ip-rate-limits", "natanael");
+                    span.log();
+                    span.finish();
+				})	
 				.toD("https4://" 
 					+  "${headers." + Exchange.HTTP_HOST + "}" + ":" 
 					+ "${headers." + Exchange.HTTP_PORT + "}"
@@ -94,12 +106,16 @@ public class ProxyRoute extends RouteBuilder {
 	private static void clientIpFilter(final Exchange exchange){
 		ArrayList<String> ipList = (ArrayList<String>) exchange.getIn().getHeader("X-Forwarded-For");
 		String ips = new String("");
+
+		if (ipList == null) {
+			ipList = new ArrayList<String>();
+			ipList.add(ProxyRoute.EMPTY_XFORWARDEDFOR);
+		}
+
 		for(String ip : ipList){
 			ips =  ips.concat(ip).concat(":");
 		}
-		if (ipList == null) {
-			ips = ProxyRoute.EMPTY_XFORWARDEDFOR;
-		}
+
 		exchange.setProperty(ProxyRoute.CLIENT_IP, ips);
 		
 	}
@@ -121,8 +137,14 @@ public class ProxyRoute extends RouteBuilder {
         final Message message = exchange.getIn();
 		final String body = message.getBody(String.class);
 		ArrayList<String> ipList = (ArrayList<String>) exchange.getIn().getHeader("X-Forwarded-For");
-		System.out.println(">>> CUSTOM HEADER >>> IPLIST: " + ipList.toString());
 		String ips = new String("");
+
+		if (ipList == null) {
+			ipList = new ArrayList<String>();
+			ipList.add(ProxyRoute.EMPTY_XFORWARDEDFOR);
+		}
+
+		System.out.println(">>> CUSTOM HEADER >>> IPLIST: " + ipList.toString());
 		for(String ip : ipList){
 			System.out.println(">>> CUSTOM HEADER >>> IP: " + ip);
 			ips =  ips.concat(ip).concat(":");
@@ -136,14 +158,22 @@ public class ProxyRoute extends RouteBuilder {
 	
     private static void saveHostHeader(final Exchange exchange) {
 		ArrayList<String> ipList = (ArrayList<String>) exchange.getIn().getHeader("X-Forwarded-For");
-		System.out.println(ipList.getClass());
-		System.out.println(">>> SAVE HEADER >>> IPLKIST: " + ipList.toString());
 		String ips = new String("");
+
+		if (ipList == null) {
+			ipList = new ArrayList<String>();
+			ipList.add(ProxyRoute.EMPTY_XFORWARDEDFOR);
+		}
+		
+		System.out.println(">>> SAVE HEADER >>> IPLIST: " + ipList.toString());
+		
 		for(String ip : ipList){
 			System.out.println(">>> SAVE HEADER>>> IP: " + ip);
 			ips =  ips.concat(ip).concat(":");
 		}
+
 		System.out.println(">>> SAVE HEADER >>> IP: " + ips);
+
         final Message message = exchange.getIn();
         System.out.println(">>> SAVE HEADER : " + message.getHeaders());
         String hostHeader = message.getHeader("Host", String.class);
