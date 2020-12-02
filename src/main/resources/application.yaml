@@ -32,7 +32,7 @@ camel:
 # lets listen on all ports to ensure we can be invoked from the pod ip address
 server:
   address: 0.0.0.0
-  port: 8085
+  port: ${SERVER_PORT:8085}
 
 # lets use a different management port in case you need to listen to HTTP requests on 8080
 management:
@@ -64,7 +64,7 @@ opentracing:
       decision: true
     udp-sender:
       host: ${OPENSHIFT_JAEGER_HOST:localhost}
-      port: 6831
+      port: ${OPENSHIFT_JAEGER_port:6831}
     http-sender:
       url: ${OPENSHIFT_JAEGER_TRACE_API_URL:http://localhost:14268/api/traces}
     expand-exception-logs: true
@@ -99,13 +99,13 @@ infinispan:
       auth_username: 
       auth_password: 
       use_auth: false
-      connect_timeout: 5000
-      socket_timeout: 5000
-      max_retries: 3
+      connect_timeout: ${RHDG_HOTROD_CONN_TIMEOUT:5000}
+      socket_timeout: ${RHDG_HOTROD_SOCKET_TIMEOUT:5000}
+      max_retries: 5
       server_list: ${JDG_APP_NAME:datagrid-fuse-policy}.${JDG_SERVICE_NAMESPACE:rh-datagrid-73}.svc:11222
   hotrod:
     trustStoreFileName: ${SERVICE_CA:/var/run/secrets/kubernetes.io/serviceaccount/service-ca.crt}
     host: ${JDG_APP_NAME:datagrid-fuse-policy}.${JDG_SERVICE_NAMESPACE:rh-datagrid-73}.svc
-    port: 11222
+    port: ${JDG_HOTROD_PORT:11222}
     username: 
     password: 
