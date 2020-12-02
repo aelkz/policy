@@ -8,6 +8,7 @@ import org.apache.camel.component.infinispan.InfinispanOperation;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
+import br.gov.bnb.openbanking.policy.ipratelimit.processor.JeagerTagProcessor;
 import br.gov.bnb.openbanking.policy.ipratelimit.processor.RateLimitProcessor;
 import br.gov.bnb.openbanking.policy.ipratelimit.processor.RateLimitStorageProcessor;
 
@@ -39,6 +40,7 @@ public class CacheRoute extends RouteBuilder{
       .routeId("get-hit-count-route")
       .setHeader(InfinispanConstants.OPERATION, constant(InfinispanOperation.GET))			
       .setHeader(InfinispanConstants.KEY , simple("${exchangeProperty."+ProxyRoute.CLIENT_IP+"}"))
+      .process(new JeagerTagProcessor("proxy-before-infinispan-producer","request-headers", simple("${headers}"))).id("opentracing:before-infinispan-request")
       .to("infinispan://{{custom.rhdg.cache.name}}?cacheContainer=#cacheContainer")
       .process(rateLimitProcessor);
     

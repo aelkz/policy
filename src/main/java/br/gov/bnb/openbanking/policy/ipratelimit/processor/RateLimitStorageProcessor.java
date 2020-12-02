@@ -6,7 +6,6 @@ import java.util.logging.Logger;
 import org.apache.camel.Exchange;
 import org.apache.camel.Processor;
 import org.apache.camel.component.infinispan.InfinispanConstants;
-import org.apache.camel.component.infinispan.InfinispanOperation;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 

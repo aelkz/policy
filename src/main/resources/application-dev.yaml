@@ -3,15 +3,15 @@
 # ---------------------------------------------
 spring:
   application:
-    name: ${OPENSHIFT_APP_NAME:openbanking-admin-api}
+    name: ${OPENSHIFT_APP_NAME:openbanking-proxy-policy}
   datasource:
     initialization-mode: never
 
 api:
-  title: ${OPENSHIFT_APP_NAME:openbanking-admin-api}
-  description: Banco do Nordeste - openbanking-admin-api
+  title: ${OPENSHIFT_APP_NAME:openbanking-proxy-policy}
+  description: Banco do Nordeste - openbanking-proxy-policy
   version: 1
-  hostname: ${OPENSHIFT_HOST_NAME:openbanking-admin-api.apps.openshift.com}
+  hostname: ${OPENSHIFT_HOST_NAME:openbanking-proxy-policy.apps.openshift.com}
 
 logging:
   config: classpath:logback.xml
@@ -21,7 +21,7 @@ logging:
 # options from org.apache.camel.spring.boot.CamelConfigurationProperties can be configured here
 camel:
   springboot:
-    name: ${OPENSHIFT_APP_NAME:openbanking-admin-api}
+    name: ${OPENSHIFT_APP_NAME:openbanking-proxy-policy}
     main-run-controller: true
   component:
     servlet:
@@ -57,7 +57,7 @@ management:
 opentracing:
   jaeger:
     enabled: true
-    service-name: ${OPENSHIFT_APP_NAME:openbanking-admin-api}
+    service-name: ${OPENSHIFT_APP_NAME:openbanking-proxy-policy}
     enable-b3-propagation: true
     log-spans: true
     const-sampler:
@@ -76,7 +76,8 @@ opentracing:
       flush-interval: 1000
     tags:
       - openbanking
-      - admin
+      - proxy
+      - ip-rate-limit
 
 # =============================================
 # prometheus api parameters
@@ -114,10 +115,10 @@ infinispan:
       connect_timeout: 5000
       socket_timeout: 5000
       max_retries: 3
-      server_list: ${JDG_APP_NAME:datagrid-fuse-policy}.${JDG_SERVICE_NAMESPACE:rh-datagrid-73}.svc:11222
+      server_list: 127.0.0.1 :11222
   hotrod:
     trustStoreFileName: ${SERVICE_CA:/var/run/secrets/kubernetes.io/serviceaccount/service-ca.crt}
-    host: ${JDG_APP_NAME:datagrid-fuse-policy}.${JDG_SERVICE_NAMESPACE:rh-datagrid-73}.svc
+    host: 127.0.0.1
     port: 11222
     username: 
     password: 
