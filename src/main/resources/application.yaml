@@ -75,7 +75,6 @@ opentracing:
       - openbanking
       - proxy
       - ip-rate-limit
-
 custom:
   policy: 
     ipratelimit:

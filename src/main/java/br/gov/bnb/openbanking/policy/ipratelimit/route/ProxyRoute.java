@@ -41,8 +41,6 @@ public class ProxyRoute extends RouteBuilder {
 
 	@Override
 	public void configure() throws Exception {
-
-		ArrayList<String> ipList = new ArrayList<String>();
 	
 		if(!env){
 			configureHttp4();
@@ -50,6 +48,7 @@ public class ProxyRoute extends RouteBuilder {
 				.id("from-netty-tls")
 				.to("direct:internal-redirect");
 		}else {
+			ArrayList<String> ipList = new ArrayList<String>();
 			ipList.add("10.6.128.23");
 			ipList.add("200.164.107.55");
 
