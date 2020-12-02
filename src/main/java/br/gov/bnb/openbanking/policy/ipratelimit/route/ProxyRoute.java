@@ -61,9 +61,6 @@ public class ProxyRoute extends RouteBuilder {
 
 		from("direct:internal-redirect").id("proxy:internal-redirect")
 			.doTry()
-				//.process(ProxyRoute::beforeRedirect)
-				//.process(ProxyRoute::saveHostHeader).id("save-headers")
-            	//.process(ProxyRoute::addCustomHeader).id("add-custom-headers")
 				.process(ProxyRoute::clientIpFilter).id("proxy:clietIp-discovery")
 				.to("direct:getHitCount").id("rhdg:get-hit-count")
 				.wireTap("direct:incrementHitCount").id("rhdg:process-hit-count")
@@ -102,24 +99,22 @@ public class ProxyRoute extends RouteBuilder {
 	 * @param exchange
 	 */
 	private static void clientIpFilter(final Exchange exchange){
-		ArrayList<String> ipList = (ArrayList<String>) exchange.getIn().getHeader("X-Forwarded-For");
-		String list = exchange.getIn().getHeader("X-Forwarded-For").toString();
-
-		System.out.println(">>> "+list+" <<<<");
-
-		String ips = new String("");
-
-		if (ipList == null) {
-			ipList = new ArrayList<String>();
-			ipList.add(ProxyRoute.EMPTY_XFORWARDEDFOR);
+		Object xForwardedFor = exchange.getIn().getHeader("X-Forwarded-For");
+		ArrayList<String> ipList = new ArrayList<String>();
+		if (xForwardedFor instanceof String){
+			ipList.add((String)xForwardedFor);
+		}else{
+			ipList = (ArrayList<String>) xForwardedFor;
 		}
-
+		
+		String ips = new String("");
 		for(String ip : ipList){
 			ips =  ips.concat(ip).concat(":");
 		}
-
+		if (ipList == null) {
+			ips = ProxyRoute.EMPTY_XFORWARDEDFOR;
+		}
 		exchange.setProperty(ProxyRoute.CLIENT_IP, ips);
-		
 	}
 
 	public static void uppercase(final Exchange exchange) {
@@ -136,17 +131,19 @@ public class ProxyRoute extends RouteBuilder {
 	}
 
 	private static void addCustomHeader(final Exchange exchange) {
-        final Message message = exchange.getIn();
-		final String body = message.getBody(String.class);
-		ArrayList<String> ipList = (ArrayList<String>) exchange.getIn().getHeader("X-Forwarded-For");
-		String ips = new String("");
-
-		if (ipList == null) {
-			ipList = new ArrayList<String>();
-			ipList.add(ProxyRoute.EMPTY_XFORWARDEDFOR);
+        Object xForwardedFor = exchange.getIn().getHeader("X-Forwarded-For");
+		ArrayList<String> ipList = new ArrayList<String>();
+		if (xForwardedFor instanceof String){
+			ipList.add((String)xForwardedFor);
+		}else{
+			ipList = (ArrayList<String>) xForwardedFor;
 		}
 
+        final Message message = exchange.getIn();
+		final String body = message.getBody(String.class);
+		
 		System.out.println(">>> CUSTOM HEADER >>> IPLIST: " + ipList.toString());
+		String ips = new String("");
 		for(String ip : ipList){
 			System.out.println(">>> CUSTOM HEADER >>> IP: " + ip);
 			ips =  ips.concat(ip).concat(":");
@@ -159,23 +156,21 @@ public class ProxyRoute extends RouteBuilder {
 	}
 	
     private static void saveHostHeader(final Exchange exchange) {
-		ArrayList<String> ipList = (ArrayList<String>) exchange.getIn().getHeader("X-Forwarded-For");
-		String ips = new String("");
-
-		if (ipList == null) {
-			ipList = new ArrayList<String>();
-			ipList.add(ProxyRoute.EMPTY_XFORWARDEDFOR);
+		Object xForwardedFor = exchange.getIn().getHeader("X-Forwarded-For");
+		ArrayList<String> ipList = new ArrayList<String>();
+		if (xForwardedFor instanceof String){
+			ipList.add((String)xForwardedFor);
+		}else{
+			ipList = (ArrayList<String>)xForwardedFor;
 		}
-		
+
 		System.out.println(">>> SAVE HEADER >>> IPLIST: " + ipList.toString());
-		
+		String ips = new String("");
 		for(String ip : ipList){
 			System.out.println(">>> SAVE HEADER>>> IP: " + ip);
 			ips =  ips.concat(ip).concat(":");
 		}
-
 		System.out.println(">>> SAVE HEADER >>> IP: " + ips);
-
         final Message message = exchange.getIn();
         System.out.println(">>> SAVE HEADER : " + message.getHeaders());
         String hostHeader = message.getHeader("Host", String.class);
