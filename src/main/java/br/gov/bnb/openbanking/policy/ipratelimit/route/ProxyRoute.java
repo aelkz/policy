@@ -63,7 +63,6 @@ public class ProxyRoute extends RouteBuilder {
 				.process(ProxyRoute::clientIpFilter).id("proxy:clietIp-discovery")
 				.to("direct:getHitCount").id("rhdg:get-hit-count")
 				.wireTap("direct:incrementHitCount").id("rhdg:process-hit-count")
-				.process(new JeagerTagProcessor("X-Forwarded-For", simple("${header.X-Forwarded-For}"))).id("opentracing:before-endpoint-request")
 				.toD("https4://" 
 					+  "${headers." + Exchange.HTTP_HOST + "}" + ":" 
 					+ "${headers." + Exchange.HTTP_PORT + "}"
@@ -71,7 +70,8 @@ public class ProxyRoute extends RouteBuilder {
 				.process(ProxyRoute::uppercase).process((e) -> {
 					LOGGER.info(">>> request forwarded to backend");
 				}).id("proxy:after-endpoint-request")
-				.process(new JeagerTagProcessor("body", simple("${body}"))).id("opentracing:after-endpoint-request")
+				.process(new JeagerTagProcessor("X-Forwarded-For", simple("${header.X-Forwarded-For}"))).id("opentracing:before-endpoint-request")
+				//.process(new JeagerTagProcessor("body", simple("${body}"))).id("opentracing:after-endpoint-request")
 				
 			.endDoTry()
 			.doCatch(RateLimitException.class)

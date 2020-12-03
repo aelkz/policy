@@ -24,18 +24,18 @@ camel:
     name: ${OPENSHIFT_APP_NAME:openbanking-proxy-policy}
     main-run-controller: true
   component:
-    servlet:
-      mapping:
-        contextPath: /api/v${api.version}/*
     jmxEnabled: true
 
 # lets listen on all ports to ensure we can be invoked from the pod ip address
 server:
   address: 0.0.0.0
-  port: 8085
+  port: 8090
 
 # lets use a different management port in case you need to listen to HTTP requests on 8080
 management:
+  server:
+    port: 8081
+    address: 0.0.0.0
   endpoints:
     web:
       exposure:
@@ -45,6 +45,7 @@ management:
           - metrics
           - jvm
           - prometheus
+          
   metrics:
     export:
       prometheus:
@@ -62,9 +63,6 @@ opentracing:
     log-spans: true
     const-sampler:
       decision: true
-    udp-sender:
-      host: ${OPENSHIFT_JAEGER_HOST:localhost}
-      port: 6831
     http-sender:
       #url: http://jaeger-collector:14268/api/traces
       url: ${OPENSHIFT_JAEGER_TRACE_API_URL:http://localhost:14268/api/traces}
@@ -80,14 +78,9 @@ opentracing:
       - ip-rate-limit
 
 # =============================================
-# prometheus api parameters
+# custom configurations
+# 
 # ---------------------------------------------
-prometheus:
-  host: ${OPENSHIFT_PROMETHEUS_API_URL:"prometheus.microservices-openbanking.svc.cluster.local"}
-  port: 8080
-  status-path: ${OPENSHIFT_PROMETHEUS_STATUS_URL:prometheus.microservices-openbanking.svc.cluster.local:8080/health}
-
-
 custom:
   policy: 
     ipratelimit:
@@ -104,18 +97,21 @@ custom:
       check:
         host: ${JDG_APP_NAME:datagrid-fuse-policy}.${JDG_SERVICE_NAMESPACE:rh-datagrid-73}.svc:9990
 
-# Native Keys of API. With this keys is possible to send the properties file as parameter in ConfigurationBuilder. See (configurationBuilder.withProperties(file properties);)
+# =============================================
+# datagrid configurations
+# # Native Keys of API. With this keys is possible to send the properties file as parameter in ConfigurationBuilder. See (configurationBuilder.withProperties(file properties);)
+# ---------------------------------------------
 infinispan:
   client:
     hotrod:
-      auth_server_name:
-      auth_username: 
-      auth_password: 
-      use_auth: false
+      #auth_server_name:
+      #auth_username: 
+      #auth_password: 
+      #use_auth: false
       connect_timeout: 5000
       socket_timeout: 5000
       max_retries: 3
-      server_list: 127.0.0.1 :11222
+      #server_list: 127.0.0.1 :11222
   hotrod:
     trustStoreFileName: ${SERVICE_CA:/var/run/secrets/kubernetes.io/serviceaccount/service-ca.crt}
     host: 127.0.0.1

@@ -57,7 +57,7 @@ management:
 opentracing:
   jaeger:
     enabled: true
-    service-name: ${OPENSHIFT_APP_NAME:openbanking-ip-rate-limit}
+    service-name: ${OPENSHIFT_APP_NAME:openbanking-proxy-policy}
     enable-b3-propagation: true
     log-spans: true
     const-sampler:
