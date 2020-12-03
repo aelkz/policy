@@ -14,13 +14,21 @@
         <java.version>1.8</java.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
-        <!-- from fuse 7.7 official documentation -->
-        <!--
+        <!-- ---------------------------------------------------------------------- -->
+        <!-- LATEST FUSE RELEASE= 7.7.0.fuse-770012-redhat-00003     -->
+        <!-- ---------------------------------------------------------------------- -->
+        <!-- will expose:
+            http://localhost:8090/metrics/
+            http://localhost:8090/trace
+            http://localhost:8090/beans
+            http://localhost:8090/camel/health/check
         -->
-        <fuse.bom.version>7.7.0.fuse-sb2-770010-redhat-00001</fuse.bom.version>
-        <!-- from fuse support engineer -->
-        <!--
         <fuse.bom.version>7.7.0.fuse-770012-redhat-00003</fuse.bom.version>
+        <!-- ---------------------------------------------------------------------- -->
+        <!-- FROM OFFICIAL REDHAT FUSE DOCS=7.7.0.fuse-sb2-770010-redhat-00001
+        <!-- ---------------------------------------------------------------------- -->
+        <!--
+        <fuse.bom.version>7.7.0.fuse-sb2-770010-redhat-00001</fuse.bom.version>
         -->
         <version.springboot>2.1.6.RELEASE</version.springboot>
         <!-- prometheus -->
@@ -86,10 +94,13 @@
             <groupId>org.apache.camel</groupId>
             <artifactId>camel-infinispan-starter</artifactId>
         </dependency>
+        <!-- camel-servlet-starter = for use only with: 7.7.0.fuse-sb2-770010-redhat-00001 -->
+        <!--
         <dependency>
             <groupId>org.apache.camel</groupId>
             <artifactId>camel-servlet-starter</artifactId>
         </dependency>
+        -->
         <dependency>
             <groupId>org.apache.camel</groupId>
             <artifactId>camel-jackson-starter</artifactId>

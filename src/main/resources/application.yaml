@@ -20,6 +20,14 @@ logging:
 
 # options from org.apache.camel.spring.boot.CamelConfigurationProperties can be configured here
 camel:
+  health:
+    check:
+      routes:
+        enabled: true
+      indicator:
+        enabled: true
+      service:
+        enabled: true
   springboot:
     name: ${OPENSHIFT_APP_NAME:openbanking-proxy-policy}
     main-run-controller: true
@@ -29,10 +37,12 @@ camel:
 # lets listen on all ports to ensure we can be invoked from the pod ip address
 server:
   address: 0.0.0.0
-  port: 8090
+  port: ${SERVER_PORT:8090}
 
 # lets use a different management port in case you need to listen to HTTP requests on 8080
 management:
+  security:
+    enabled: false
   server:
     # default health-check probe port: 8081
     port: 8081
@@ -79,13 +89,12 @@ opentracing:
 
 # =============================================
 # custom configurations
-#
 # ---------------------------------------------
 custom:
   policy:
     ipratelimit:
       maxhitcount: ${MAX_IP_HIT_COUNT:10}
-      # Milliseconds time windows for requests
+      # milliseconds time window for external requests
       timeWindow: ${TIME_WINDOW:30000}
   dev:
     env: true
@@ -99,7 +108,8 @@ custom:
 
 # =============================================
 # datagrid configurations
-# # Native Keys of API. With this keys is possible to send the properties file as parameter in ConfigurationBuilder. See (configurationBuilder.withProperties(file properties);)
+# Native Keys of API. With this keys is possible to send the properties file as parameter in ConfigurationBuilder.
+# see (configurationBuilder.withProperties(file properties);)
 # ---------------------------------------------
 infinispan:
   client:
@@ -108,13 +118,13 @@ infinispan:
       #auth_username:
       #auth_password:
       #use_auth: false
-      connect_timeout: 5000
-      socket_timeout: 5000
-      max_retries: 3
-      #server_list: 127.0.0.1 :11222
+      connect_timeout: ${RHDG_HOTROD_CONN_TIMEOUT:5000}
+      socket_timeout: ${RHDG_HOTROD_SOCKET_TIMEOUT:5000}
+      max_retries: 5
+      server_list: ${JDG_APP_NAME:datagrid-fuse-policy}.${JDG_SERVICE_NAMESPACE:rh-datagrid-73}.svc:11222
   hotrod:
     trustStoreFileName: ${SERVICE_CA:/var/run/secrets/kubernetes.io/serviceaccount/service-ca.crt}
-    host: 127.0.0.1
-    port: 11222
+    host: ${JDG_APP_NAME:datagrid-fuse-policy}.${JDG_SERVICE_NAMESPACE:rh-datagrid-73}.svc
+    port: ${JDG_HOTROD_PORT:11222}
     username:
     password:
