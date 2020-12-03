@@ -3,12 +3,10 @@ package br.gov.bnb.openbanking.policy.ipratelimit.dto;
 import java.io.Serializable;
 import java.util.LinkedList;
 
-public class HitCountStorageDTO implements Serializable{
+public class HitCountStorageDTO implements Serializable {
 
     private static final long serialVersionUID = 997307483019714284L;
-
     private String ip;
-
     private LinkedList<Long> timestamps;
 
     public String getIp() {
@@ -51,5 +49,5 @@ public class HitCountStorageDTO implements Serializable{
             return false;
         return true;
     }
-    
+
 }
