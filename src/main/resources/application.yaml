@@ -97,7 +97,7 @@ custom:
       # milliseconds time window for external requests
       timeWindow: ${TIME_WINDOW:30000}
   dev:
-    env: true
+    env: ${DEV_ENV:true}
   endpoint:
   rhdg:
     cache:
