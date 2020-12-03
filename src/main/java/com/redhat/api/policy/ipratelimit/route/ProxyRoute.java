@@ -1,8 +1,9 @@
-package br.gov.bnb.openbanking.policy.ipratelimit.route;
+package com.redhat.api.policy.ipratelimit.route;
 
 import java.util.ArrayList;
 import java.util.logging.Logger;
 
+import com.redhat.api.policy.ipratelimit.exception.RateLimitException;
 import org.apache.camel.Exchange;
 import org.apache.camel.Message;
 import org.apache.camel.builder.RouteBuilder;
@@ -13,8 +14,6 @@ import org.apache.camel.util.jsse.TrustManagersParameters;
 import org.apache.http.conn.ssl.NoopHostnameVerifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
-
-import br.gov.bnb.openbanking.policy.ipratelimit.exception.RateLimitException;
 
 /**
  * Configuração de rota que servirá como proxy para a custom policy

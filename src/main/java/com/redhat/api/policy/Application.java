@@ -1,4 +1,4 @@
-package br.gov.bnb.openbanking.policy;
+package com.redhat.api.policy;
 
 import org.apache.camel.opentracing.starter.CamelOpenTracing;
 import org.springframework.boot.SpringApplication;

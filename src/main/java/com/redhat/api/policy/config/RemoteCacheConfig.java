@@ -1,4 +1,4 @@
-package br.gov.bnb.openbanking.policy.config;
+package com.redhat.api.policy.config;
 
 import org.infinispan.client.hotrod.RemoteCacheManager;
 import org.infinispan.client.hotrod.configuration.ClientIntelligence;

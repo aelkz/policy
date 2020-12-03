@@ -1,4 +1,4 @@
-package br.gov.bnb.openbanking.policy.ipratelimit.processor;
+package com.redhat.api.policy.ipratelimit.processor;
 
 import java.util.LinkedList;
 import java.util.logging.Logger;
@@ -8,9 +8,9 @@ import org.apache.camel.Processor;
 import org.apache.camel.component.infinispan.InfinispanConstants;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
-import br.gov.bnb.openbanking.policy.ipratelimit.dto.HitCountDTO;
-import br.gov.bnb.openbanking.policy.ipratelimit.dto.HitCountStorageDTO;
-import br.gov.bnb.openbanking.policy.ipratelimit.route.CacheRoute;
+import com.redhat.api.policy.ipratelimit.dto.HitCountDTO;
+import com.redhat.api.policy.ipratelimit.dto.HitCountStorageDTO;
+import com.redhat.api.policy.ipratelimit.route.CacheRoute;
 
 /**
  * Componente responável por gerenciar a quantidade de requisições dentro da janela tempo definida

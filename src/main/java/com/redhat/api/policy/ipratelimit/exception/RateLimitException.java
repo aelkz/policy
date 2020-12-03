@@ -1,4 +1,4 @@
-package br.gov.bnb.openbanking.policy.ipratelimit.exception;
+package com.redhat.api.policy.ipratelimit.exception;
 
 public class RateLimitException extends Exception{
 	

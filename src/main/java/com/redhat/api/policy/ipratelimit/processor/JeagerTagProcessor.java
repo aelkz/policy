@@ -1,4 +1,4 @@
-package br.gov.bnb.openbanking.policy.ipratelimit.processor;
+package com.redhat.api.policy.ipratelimit.processor;
 
 import org.apache.camel.Exchange;
 import org.apache.camel.Expression;

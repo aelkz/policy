@@ -1,4 +1,4 @@
-package br.gov.bnb.openbanking.policy.ipratelimit.dto;
+package com.redhat.api.policy.ipratelimit.dto;
 
 import java.io.Serializable;
 import java.util.LinkedList;

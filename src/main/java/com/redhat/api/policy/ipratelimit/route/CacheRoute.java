@@ -1,15 +1,14 @@
-package br.gov.bnb.openbanking.policy.ipratelimit.route;
+package com.redhat.api.policy.ipratelimit.route;
 
 import java.util.logging.Logger;
 
+import com.redhat.api.policy.ipratelimit.processor.RateLimitProcessor;
+import com.redhat.api.policy.ipratelimit.processor.RateLimitStorageProcessor;
 import org.apache.camel.builder.RouteBuilder;
 import org.apache.camel.component.infinispan.InfinispanConstants;
 import org.apache.camel.component.infinispan.InfinispanOperation;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
-
-import br.gov.bnb.openbanking.policy.ipratelimit.processor.RateLimitProcessor;
-import br.gov.bnb.openbanking.policy.ipratelimit.processor.RateLimitStorageProcessor;
 
 /**
  * Configuração de rota responsável pelo gerenciamento de valores no Red Hat Data Grid

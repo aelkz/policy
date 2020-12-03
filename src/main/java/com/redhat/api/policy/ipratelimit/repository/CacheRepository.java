@@ -1,4 +1,4 @@
-package br.gov.bnb.openbanking.policy.ipratelimit.repository;
+package com.redhat.api.policy.ipratelimit.repository;
 
 import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
