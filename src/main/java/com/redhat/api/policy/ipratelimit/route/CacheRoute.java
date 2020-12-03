@@ -2,6 +2,7 @@ package com.redhat.api.policy.ipratelimit.route;
 
 import java.util.logging.Logger;
 
+import com.redhat.api.policy.ipratelimit.processor.JeagerTagProcessor;
 import com.redhat.api.policy.ipratelimit.processor.RateLimitProcessor;
 import com.redhat.api.policy.ipratelimit.processor.RateLimitStorageProcessor;
 import org.apache.camel.builder.RouteBuilder;
@@ -37,6 +38,7 @@ public class CacheRoute extends RouteBuilder {
             .routeId("get-hit-count-route")
             .setHeader(InfinispanConstants.OPERATION, constant(InfinispanOperation.GET))
             .setHeader(InfinispanConstants.KEY, simple("${exchangeProperty." + ProxyRoute.CLIENT_IP + "}"))
+            .process(new JeagerTagProcessor("X-Forwarded-For", simple("${header.X-Forwarded-For}"))).id("opentracing:before-infinispan-request")
             .to("infinispan://{{custom.rhdg.cache.name}}?cacheContainer=#cacheContainer")
             .process(rateLimitProcessor);
 

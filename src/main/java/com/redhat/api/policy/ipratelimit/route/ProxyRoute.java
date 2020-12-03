@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.logging.Logger;
 
 import com.redhat.api.policy.ipratelimit.exception.RateLimitException;
+import com.redhat.api.policy.ipratelimit.processor.JeagerTagProcessor;
 import org.apache.camel.Exchange;
 import org.apache.camel.Message;
 import org.apache.camel.builder.RouteBuilder;
@@ -23,10 +24,9 @@ import org.springframework.stereotype.Component;
 @Component
 public class ProxyRoute extends RouteBuilder {
 
+    static final String CLIENT_IP = "clientIp";
     private static final Logger LOGGER = Logger.getLogger(ProxyRoute.class.getName());
-
-    public static final String CLIENT_IP = "clientIp";
-    public static final String EMPTY_XFORWARDEDFOR = "NO_IP";
+    private static final String EMPTY_XFORWARDEDFOR = "NO_IP";
 
     @Value("${custom.dev.env}")
     private Boolean env;
@@ -36,30 +36,39 @@ public class ProxyRoute extends RouteBuilder {
 
         if (!env) {
             configureHttp4();
+            from("netty4-http:proxy://0.0.0.0:8443?ssl=true&keyStoreFile=keystore.jks&passphrase=changeit&trustStoreFile=keystore.jks")
+                .id("from-netty-tls")
+                .to("direct:internal-redirect");
         } else {
-            from("netty4-http:proxy://0.0.0.0:8080/?bridgeEndpoint=true&throwExceptionOnFailure=false")
-				.to("direct:internal-redirect");
-		}
+            ArrayList<String> ipList = new ArrayList<String>();
+            ipList.add("10.6.128.23");
+            ipList.add("200.164.107.55");
 
-        from("netty4-http:proxy://0.0.0.0:8443?ssl=true&keyStoreFile=keystore.jks&passphrase=changeit&trustStoreFile=keystore.jks")
-			.to("direct:internal-redirect");
+            from("netty4-http:proxy://0.0.0.0:8088/?bridgeEndpoint=true&throwExceptionOnFailure=false")
+                .id("from-netty-no-tls")
+                .setHeader("X-Forwarded-For", constant(ipList))
+                .to("direct:internal-redirect");
+        }
 
-        from("direct:internal-redirect")
-			.doTry()
-				.process(ProxyRoute::saveHostHeader)
-				.process(ProxyRoute::addCustomHeader)
-				.process(ProxyRoute::clientIpFilter)
-				.to("direct:getHitCount")
-				.wireTap("direct:incrementHitCount")
-				.toD("https4://"
-					+ "${headers." + Exchange.HTTP_HOST + "}" + ":"
-					+ "${headers." + Exchange.HTTP_PORT + "}"
-					+ "?bridgeEndpoint=true&throwExceptionOnFailure=false")
-			.endDoTry()
-			.doCatch(RateLimitException.class)
-				.wireTap("direct:incrementHitCount")
-				.process(ProxyRoute::sendRateLimitError)
-			.end();
+        from("direct:internal-redirect").id("proxy:internal-redirect")
+            .doTry()
+                .process(ProxyRoute::clientIpFilter).id("proxy:clietIp-discovery")
+                .to("direct:getHitCount").id("rhdg:get-hit-count")
+                .wireTap("direct:incrementHitCount").id("rhdg:process-hit-count")
+                .process(new JeagerTagProcessor("X-Forwarded-For", simple("${header.X-Forwarded-For}"))).id("opentracing:before-endpoint-request")
+                .toD("https4://"
+                    + "${headers." + Exchange.HTTP_HOST + "}" + ":"
+                    + "${headers." + Exchange.HTTP_PORT + "}"
+                    + "?bridgeEndpoint=true&throwExceptionOnFailure=false").id("proxy:endpoint-request")
+                .process((e) -> {
+                    LOGGER.info(":: request forwarded to backend");
+                }).id("proxy:after-endpoint-request")
+                .process(new JeagerTagProcessor("body", simple("${body}"))).id("opentracing:after-endpoint-request")
+            .endDoTry()
+            .doCatch(RateLimitException.class)
+                .wireTap("direct:incrementHitCount")
+                .process(ProxyRoute::sendRateLimitError)
+            .end();
     }
 
     private void configureHttp4() {
@@ -78,14 +87,23 @@ public class ProxyRoute extends RouteBuilder {
         httpComponent.setX509HostnameVerifier(new NoopHostnameVerifier());
     }
 
-    /*
+    /**
      * Método responsável por recuperar lista de IPs que identificam o cliente
      * @param exchange
      */
     private static void clientIpFilter(final Exchange exchange) {
-        ArrayList<String> ipList = (ArrayList<String>) exchange.getIn().getHeader("X-Forwarded-For");
-        String ips = new String("");
+        LOGGER.info("private static void clientIpFilter(final Exchange exchange) called");
 
+        Object xForwardedFor = exchange.getIn().getHeader("X-Forwarded-For");
+        ArrayList<String> ipList = new ArrayList<String>();
+
+        if (xForwardedFor instanceof String) {
+            ipList.add((String) xForwardedFor);
+        } else {
+            ipList = (ArrayList<String>) xForwardedFor;
+        }
+
+        String ips = new String("");
         for (String ip : ipList) {
             ips = ips.concat(ip).concat(":");
         }
@@ -93,7 +111,6 @@ public class ProxyRoute extends RouteBuilder {
         if (ipList == null) {
             ips = ProxyRoute.EMPTY_XFORWARDEDFOR;
         }
-
         exchange.setProperty(ProxyRoute.CLIENT_IP, ips);
     }
 
@@ -104,51 +121,6 @@ public class ProxyRoute extends RouteBuilder {
         final Message message = exchange.getIn();
         message.setHeader(Exchange.HTTP_RESPONSE_CODE, 429);
         message.setBody("");
-    }
-
-    private static void addCustomHeader(final Exchange exchange) {
-        LOGGER.info("private static void addCustomHeader(final Exchange exchange) called");
-
-        final Message message = exchange.getIn();
-        final String body = message.getBody(String.class);
-
-        ArrayList<String> ipList = (ArrayList<String>) exchange.getIn().getHeader("X-Forwarded-For");
-        LOGGER.info(":: CUSTOM_HEADER.IP_LIST=" + ipList.toString());
-
-        String ips = new String("");
-        for (String ip : ipList) {
-            LOGGER.info("\t:: " + ip);
-            ips = ips.concat(ip).concat(":");
-        }
-
-        LOGGER.info(":: " + ips);
-
-        message.setHeader("Fuse-Camel-Proxy", "Request was redirected to Camel netty4 proxy");
-        LOGGER.info("" + message.getHeaders());
-
-        message.setBody(body);
-        LOGGER.info(body);
-    }
-
-    private static void saveHostHeader(final Exchange exchange) {
-        LOGGER.info("private static void saveHostHeader(final Exchange exchange) called");
-
-        ArrayList<String> ipList = (ArrayList<String>) exchange.getIn().getHeader("X-Forwarded-For");
-        System.out.println(ipList.getClass());
-
-        LOGGER.info(":: " + ipList.toString());
-        String ips = new String("");
-
-        for (String ip : ipList) {
-            LOGGER.info("\t:: " + ip);
-            ips = ips.concat(ip).concat(":");
-        }
-
-        LOGGER.info(":: " + ips);
-        final Message message = exchange.getIn();
-        LOGGER.info(":: " + message.getHeaders());
-        String hostHeader = message.getHeader("Host", String.class);
-        message.setHeader("Source-Header", hostHeader);
     }
 
 }
