@@ -11,6 +11,7 @@ import org.apache.camel.Exchange;
 import org.apache.camel.Message;
 import org.apache.camel.builder.RouteBuilder;
 import org.apache.camel.component.http4.HttpComponent;
+import org.apache.camel.opentracing.ActiveSpanManager;
 import org.apache.camel.util.jsse.KeyStoreParameters;
 import org.apache.camel.util.jsse.SSLContextParameters;
 import org.apache.camel.util.jsse.TrustManagersParameters;
@@ -19,6 +20,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import br.gov.bnb.openbanking.policy.ipratelimit.exception.RateLimitException;
+import br.gov.bnb.openbanking.policy.ipratelimit.processor.JeagerTagProcessor;
 
 /**
  * Configuração de rota que servirá como proxy para a custom policy
@@ -39,33 +41,37 @@ public class ProxyRoute extends RouteBuilder {
 
 	@Override
 	public void configure() throws Exception {
-
+	
 		if(!env){
 			configureHttp4();
-		}else {
-			from("netty4-http:proxy://0.0.0.0:8080/?bridgeEndpoint=true&throwExceptionOnFailure=false")
+			from("netty4-http:proxy://0.0.0.0:8443?ssl=true&keyStoreFile=keystore.jks&passphrase=changeit&trustStoreFile=keystore.jks")
+				.id("from-netty-tls")
 				.to("direct:internal-redirect");
-		}
+		}else {
+			ArrayList<String> ipList = new ArrayList<String>();
+			ipList.add("10.6.128.23");
+			ipList.add("200.164.107.55");
 
-		from("netty4-http:proxy://0.0.0.0:8443?ssl=true&keyStoreFile=keystore.jks&passphrase=changeit&trustStoreFile=keystore.jks")
-			.to("direct:internal-redirect");
-		
+			from("netty4-http:proxy://0.0.0.0:8088/?bridgeEndpoint=true&throwExceptionOnFailure=false")
+				.id("from-netty-no-tls")
+				.setHeader("X-Forwarded-For", constant(ipList))
+				.to("direct:internal-redirect");
+		}	
 
-		from("direct:internal-redirect")
+		from("direct:internal-redirect").id("proxy:internal-redirect")
 			.doTry()
-				//.process(ProxyRoute::beforeRedirect)
-				.process(ProxyRoute::saveHostHeader)
-            	.process(ProxyRoute::addCustomHeader)
-				.process(ProxyRoute::clientIpFilter)
-				.to("direct:getHitCount")
-				.wireTap("direct:incrementHitCount")
+				.process(ProxyRoute::clientIpFilter).id("proxy:clietIp-discovery")
+				.to("direct:getHitCount").id("rhdg:get-hit-count")
+				.wireTap("direct:incrementHitCount").id("rhdg:process-hit-count")
 				.toD("https4://" 
 					+  "${headers." + Exchange.HTTP_HOST + "}" + ":" 
 					+ "${headers." + Exchange.HTTP_PORT + "}"
-					+ "?bridgeEndpoint=true&throwExceptionOnFailure=false")
+					+ "?bridgeEndpoint=true&throwExceptionOnFailure=false").id("proxy:endpoint-request")
 				.process(ProxyRoute::uppercase).process((e) -> {
 					LOGGER.info(">>> request forwarded to backend");
-				})
+				}).id("proxy:after-endpoint-request")
+				.process(new JeagerTagProcessor("X-Forwarded-For", simple("${header.X-Forwarded-For}"))).id("opentracing:before-endpoint-request")
+				//.process(new JeagerTagProcessor("body", simple("${body}"))).id("opentracing:after-endpoint-request")
 				
 			.endDoTry()
 			.doCatch(RateLimitException.class)
@@ -92,7 +98,14 @@ public class ProxyRoute extends RouteBuilder {
 	 * @param exchange
 	 */
 	private static void clientIpFilter(final Exchange exchange){
-		ArrayList<String> ipList = (ArrayList<String>) exchange.getIn().getHeader("X-Forwarded-For");
+		Object xForwardedFor = exchange.getIn().getHeader("X-Forwarded-For");
+		ArrayList<String> ipList = new ArrayList<String>();
+		if (xForwardedFor instanceof String){
+			ipList.add((String)xForwardedFor);
+		}else{
+			ipList = (ArrayList<String>) xForwardedFor;
+		}
+		
 		String ips = new String("");
 		for(String ip : ipList){
 			ips =  ips.concat(ip).concat(":");
@@ -101,7 +114,6 @@ public class ProxyRoute extends RouteBuilder {
 			ips = ProxyRoute.EMPTY_XFORWARDEDFOR;
 		}
 		exchange.setProperty(ProxyRoute.CLIENT_IP, ips);
-		
 	}
 
 	public static void uppercase(final Exchange exchange) {
@@ -118,9 +130,17 @@ public class ProxyRoute extends RouteBuilder {
 	}
 
 	private static void addCustomHeader(final Exchange exchange) {
+        Object xForwardedFor = exchange.getIn().getHeader("X-Forwarded-For");
+		ArrayList<String> ipList = new ArrayList<String>();
+		if (xForwardedFor instanceof String){
+			ipList.add((String)xForwardedFor);
+		}else{
+			ipList = (ArrayList<String>) xForwardedFor;
+		}
+
         final Message message = exchange.getIn();
 		final String body = message.getBody(String.class);
-		ArrayList<String> ipList = (ArrayList<String>) exchange.getIn().getHeader("X-Forwarded-For");
+		
 		System.out.println(">>> CUSTOM HEADER >>> IPLIST: " + ipList.toString());
 		String ips = new String("");
 		for(String ip : ipList){
@@ -135,9 +155,15 @@ public class ProxyRoute extends RouteBuilder {
 	}
 	
     private static void saveHostHeader(final Exchange exchange) {
-		ArrayList<String> ipList = (ArrayList<String>) exchange.getIn().getHeader("X-Forwarded-For");
-		System.out.println(ipList.getClass());
-		System.out.println(">>> SAVE HEADER >>> IPLKIST: " + ipList.toString());
+		Object xForwardedFor = exchange.getIn().getHeader("X-Forwarded-For");
+		ArrayList<String> ipList = new ArrayList<String>();
+		if (xForwardedFor instanceof String){
+			ipList.add((String)xForwardedFor);
+		}else{
+			ipList = (ArrayList<String>)xForwardedFor;
+		}
+
+		System.out.println(">>> SAVE HEADER >>> IPLIST: " + ipList.toString());
 		String ips = new String("");
 		for(String ip : ipList){
 			System.out.println(">>> SAVE HEADER>>> IP: " + ip);
@@ -149,61 +175,6 @@ public class ProxyRoute extends RouteBuilder {
         String hostHeader = message.getHeader("Host", String.class);
         message.setHeader("Source-Header", hostHeader);
     }
-	
 
-	@Deprecated
-	private static void beforeRedirect(final Exchange exchange) {
-		LOGGER.info("BEFORE REDIRECT");
-		final Message message = exchange.getIn();
-		Iterator<String> iName = message.getHeaders().keySet().iterator();
-
-		LOGGER.info("header values:");
-		while (iName.hasNext()) {
-			String key = (String) iName.next();
-			LOGGER.info("\t[" + key + "] - {" + message.getHeader(key) + "}");
-		}
-
-		// HttpServletRequest req = exchange.getIn().getBody(HttpServletRequest.class);
-		InetSocketAddress remoteAddress = (InetSocketAddress) message.getHeader("CamelNettyRemoteAddress");
-
-		LOGGER.info("");
-		LOGGER.info("REQUEST REMOTE ADDRESS: " + remoteAddress.toString());
-		LOGGER.info("REQUEST CANONICAL HOST NAME: " + remoteAddress.getAddress().getCanonicalHostName());
-		LOGGER.info("REQUEST HOST ADDRESS: " + remoteAddress.getAddress().getHostAddress());
-		LOGGER.info("REQUEST HOST NAME: " + remoteAddress.getAddress().getHostName());
-		LOGGER.info("REQUEST ADDRESS: " + new String(remoteAddress.getAddress().getAddress(), StandardCharsets.UTF_8));
-		LOGGER.info("REQUEST HOST NAME: " + remoteAddress.getHostName());
-
-		// DESCOMENTAR PARA HABILITAR O USO DO DATAGRID
-		// boolean isCanAccess = CacheRepository.isCanAccess(req.getRemoteAddr());
-		// if(isCanAccess) {
-
-		if (true) {
-			LOGGER.info("");
-
-			String host = (String) message.getHeader("CamelHttpHost");
-			String path = (String) message.getHeader("CamelHttpPath");
-			Integer port = (Integer) message.getHeader("CamelHttpPort");
-			String scheme = (String) message.getHeader("CamelHttpScheme");
-
-			LOGGER.info("REDIRECTING TO HTTP_HOST: " + host);
-			LOGGER.info("REDIRECTING TO HTTP_PORT: " + port);
-			LOGGER.info("REDIRECTING TO HTTP_PATH: " + path);
-			LOGGER.info("REDIRECTING TO HTTP_SCHEME: " + scheme);
-
-			/*
-			 * if (host.indexOf(':') > -1) {
-			 * LOGGER.info("\ttrimming port from host variable: " + host); host =
-			 * remoteAddress.getHostName(); LOGGER.info("\tadjusted to: " + host); }
-			 */
-
-			LOGGER.info("--------------------------------------------------------------------------------");
-			LOGGER.info("PROXY FORWARDING TO " + message.getHeader(Exchange.HTTP_SCHEME) + "://"
-					+ message.getHeader(Exchange.HTTP_HOST) + ":" + message.getHeader(Exchange.HTTP_PORT) + "/"
-					+ message.getHeader(Exchange.HTTP_PATH));
-			LOGGER.info("--------------------------------------------------------------------------------");
-		}
-
-	}
 
 }

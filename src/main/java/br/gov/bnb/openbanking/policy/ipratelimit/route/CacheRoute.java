@@ -8,6 +8,7 @@ import org.apache.camel.component.infinispan.InfinispanOperation;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
+import br.gov.bnb.openbanking.policy.ipratelimit.processor.JeagerTagProcessor;
 import br.gov.bnb.openbanking.policy.ipratelimit.processor.RateLimitProcessor;
 import br.gov.bnb.openbanking.policy.ipratelimit.processor.RateLimitStorageProcessor;
 
