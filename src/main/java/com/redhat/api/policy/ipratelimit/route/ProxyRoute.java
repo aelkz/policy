@@ -38,8 +38,9 @@ public class ProxyRoute extends RouteBuilder {
             configureHttp4();
             from("netty4-http:proxy://0.0.0.0:8443?ssl=true&keyStoreFile=keystore.jks&passphrase=changeit&trustStoreFile=keystore.jks")
                 .id("from-netty-tls")
-                //.process(ProxyRoute::saveHostHeader)
-                //.process(ProxyRoute::addCustomHeader)
+                .log(">>> HEADE FROM NETTY4")
+                .process(ProxyRoute::saveHostHeader)
+                .process(ProxyRoute::addCustomHeader)
                 .to("direct:internal-redirect");
         } else {
             ArrayList<String> ipList = new ArrayList<String>();
@@ -48,15 +49,21 @@ public class ProxyRoute extends RouteBuilder {
 
             from("netty4-http:proxy://0.0.0.0:8088/?bridgeEndpoint=true&throwExceptionOnFailure=false")
                 .id("from-netty-no-tls")
+                .log(">>> HEADE FROM NETTY4")
+                .process(ProxyRoute::saveHostHeader)
+                .process(ProxyRoute::addCustomHeader)
                 .setHeader("X-Forwarded-For", constant(ipList))
                 .to("direct:internal-redirect");
         }
 
         from("direct:internal-redirect").id("proxy:internal-redirect")
+            .log(">>> HEADE FROM proxy:internal-redirect")
+            .process(ProxyRoute::saveHostHeader)
+            .process(ProxyRoute::addCustomHeader)
+            .process(ProxyRoute::clientIpFilter).id("proxy:clietIp-discovery")
+            .to("direct:getHitCount").id("rhdg:get-hit-count")
+            .wireTap("direct:incrementHitCount").id("rhdg:process-hit-count")
             .doTry()
-                .process(ProxyRoute::clientIpFilter).id("proxy:clietIp-discovery")
-                .to("direct:getHitCount").id("rhdg:get-hit-count")
-                .wireTap("direct:incrementHitCount").id("rhdg:process-hit-count")
                 .toD("https4://"
                     + "${headers." + Exchange.HTTP_HOST + "}" + ":"
                     + "${headers." + Exchange.HTTP_PORT + "}"
@@ -64,9 +71,9 @@ public class ProxyRoute extends RouteBuilder {
                 .log(":: request forwarded to backend")
                 .process(new JeagerTagProcessor("X-Forwarded-For", simple("${header.X-Forwarded-For}"))).id("opentracing:before-endpoint-request")
             .endDoTry()
-            .doCatch(RateLimitException.class)
-                .wireTap("direct:incrementHitCount")
-                .process(ProxyRoute::sendRateLimitError)
+            .doCatch(Exception.class)
+                .log(":: Exception :: direct:internal-redirect :: backend service unavailable")
+                .process(ProxyRoute::serviceUnavailable)
             .end();
     }
 
@@ -113,12 +120,13 @@ public class ProxyRoute extends RouteBuilder {
         exchange.setProperty(ProxyRoute.CLIENT_IP, ips);
     }
 
-    private static void sendRateLimitError(final Exchange exchange) {
-        LOGGER.info("private static void sendRateLimitError(final Exchange exchange) called");
+    private static void serviceUnavailable(final Exchange exchange) {
+        LOGGER.info("private static void serviceUnavailable(final Exchange exchange) called");
 
-        LOGGER.info(":: http.status.code=429");
+        LOGGER.info(":: http.status.code=503");
         final Message message = exchange.getIn();
-        message.setHeader(Exchange.HTTP_RESPONSE_CODE, 429);
+        message.setFault(true);
+        message.setHeader(Exchange.HTTP_RESPONSE_CODE, 503);
         message.setBody("");
     }
 

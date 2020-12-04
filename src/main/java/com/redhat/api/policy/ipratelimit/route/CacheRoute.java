@@ -2,9 +2,12 @@ package com.redhat.api.policy.ipratelimit.route;
 
 import java.util.logging.Logger;
 
-import com.redhat.api.policy.ipratelimit.processor.JeagerTagProcessor;
+import com.redhat.api.policy.ipratelimit.exception.RateLimitException;
 import com.redhat.api.policy.ipratelimit.processor.RateLimitProcessor;
 import com.redhat.api.policy.ipratelimit.processor.RateLimitStorageProcessor;
+
+import org.apache.camel.Exchange;
+import org.apache.camel.Message;
 import org.apache.camel.builder.RouteBuilder;
 import org.apache.camel.component.infinispan.InfinispanConstants;
 import org.apache.camel.component.infinispan.InfinispanOperation;
@@ -36,11 +39,23 @@ public class CacheRoute extends RouteBuilder {
 
         from("direct:getHitCount")
             .routeId("get-hit-count-route")
-            .setHeader(InfinispanConstants.OPERATION, constant(InfinispanOperation.GET))
-            .setHeader(InfinispanConstants.KEY, simple("${exchangeProperty." + ProxyRoute.CLIENT_IP + "}"))
-            .log(":: request forwarded to datagrid :: PUT KEY :: " + simple("${exchangeProperty." + ProxyRoute.CLIENT_IP + "}"))
-            .to("infinispan://{{custom.rhdg.cache.name}}?cacheContainer=#cacheContainer")
-            .process(rateLimitProcessor);
+            .doTry()
+                .setHeader(InfinispanConstants.OPERATION, constant(InfinispanOperation.GET))
+                .setHeader(InfinispanConstants.KEY, simple("${exchangeProperty." + ProxyRoute.CLIENT_IP + "}"))
+                .log(":: request forwarded to datagrid :: PUT KEY :: " + simple("${exchangeProperty." + ProxyRoute.CLIENT_IP + "}"))
+                .to("infinispan://{{custom.rhdg.cache.name}}?cacheContainer=#cacheContainer")
+            .endDoTry()
+            .doCatch(Exception.class)
+                .log(":: Exception :: direct:getHitCount :: datagrid service unavailable")
+                .process(CacheRoute::serviceUnavailable)
+            .end()
+            .doTry()
+                .process(rateLimitProcessor)
+            .endDoTry()
+            .doCatch(RateLimitException.class)
+                .wireTap("direct:incrementHitCount")
+                .process(CacheRoute::sendRateLimitError)
+            .end();
 
         from("direct:incrementHitCount")
             .routeId("increment-hit-count-route")
@@ -61,6 +76,26 @@ public class CacheRoute extends RouteBuilder {
             .log(":: request forwarded to datagrid :: PUT KEY " + simple("${exchangeProperty." + ProxyRoute.CLIENT_IP + "}"))
             .to("infinispan:{{custom.rhdg.cache.name}}?cacheContainer=#cacheContainer")
             .setBody(constant(""));
-}
+    }
+
+    private static void sendRateLimitError(final Exchange exchange) {
+        LOGGER.info("private static void sendRateLimitError(final Exchange exchange) called");
+
+        LOGGER.info(":: http.status.code=429");
+        final Message message = exchange.getIn();
+        message.setFault(true);
+        message.setHeader(Exchange.HTTP_RESPONSE_CODE, 429);
+        message.setBody("");
+    }
+
+    private static void serviceUnavailable(final Exchange exchange) {
+        LOGGER.info("private static void serviceUnavailable(final Exchange exchange) called");
+
+        LOGGER.info(":: http.status.code=503");
+        final Message message = exchange.getIn();
+        message.setFault(true);
+        message.setHeader(Exchange.HTTP_RESPONSE_CODE, 503);
+        message.setBody("");
+    }
 
 }
