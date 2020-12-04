@@ -86,6 +86,7 @@ opentracing:
       - openbanking
       - proxy
       - ip-rate-limit
+    include-jaeger-env-tags: false
 
 # =============================================
 # custom configurations
