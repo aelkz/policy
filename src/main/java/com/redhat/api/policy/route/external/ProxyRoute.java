@@ -58,9 +58,9 @@ public class ProxyRoute extends RouteBuilder {
                 .log(":: "+ proxyConfig.getConsumer() + " http headers:");
         }
 
-        if (policyConfig.getIpWhitelist() != null && !"".equals(policyConfig.getIpWhitelist())) {
+        if (policyConfig.getxForwardedFor() != null && !"".equals(policyConfig.getxForwardedFor())) {
             ArrayList<String> ipList = new ArrayList<String>();
-            ipList = new ArrayList<String>(Arrays.asList(policyConfig.getIpWhitelist().split(",")));
+            ipList = new ArrayList<String>(Arrays.asList(policyConfig.getxForwardedFor().split(",")));
             from.setHeader("X-Forwarded-For", constant(ipList)).to("direct:internal-redirect");
         }else {
             from.to("direct:internal-redirect");

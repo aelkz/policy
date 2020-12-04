@@ -15,8 +15,8 @@ public class PolicyConfig {
     @Value("${custom.policy.ip-rate-limit.time-window}")
     private Integer timeWindow;
 
-    @Value("${custom.policy.ip-rate-limit.ip-address-whitelist}")
-    private String ipWhitelist;
+    @Value("${custom.policy.ip-rate-limit.x-forwarded-for}")
+    private String xForwardedFor;
 
     public Integer getMaxHitCount() {
         return maxHitCount;
@@ -34,12 +34,12 @@ public class PolicyConfig {
         this.timeWindow = timeWindow;
     }
 
-    public String getIpWhitelist() {
-        return ipWhitelist;
+    public String getxForwardedFor() {
+        return xForwardedFor;
     }
 
-    public void setIpWhitelist(String ipWhitelist) {
-        this.ipWhitelist = ipWhitelist;
+    public void setxForwardedFor(String xForwardedFor) {
+        this.xForwardedFor = xForwardedFor;
     }
 }
 

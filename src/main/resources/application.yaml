@@ -131,4 +131,5 @@ custom:
       # milliseconds time window for external requests
       # 60s = 60000ms
       time-window: ${POLICY_IP_RATE_LIMIT_TIME_WINDOW:60000}
-      ip-address-whitelist: ${POLICY_IP_RATE_LIMIT_IP_WHITELIST:10.6.128.23,200.164.107.55}
+      x-forwarded-for: ${POLICY_IP_RATE_LIMIT_X_FORWARDED_FOR:10.6.128.23,200.164.107.55}
+      white-list-ips: ${POLICY_IP_RATE_LIMIT_WHITE_LIST_IPS:}
