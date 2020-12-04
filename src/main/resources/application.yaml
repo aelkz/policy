@@ -11,7 +11,7 @@ api:
   title: ${OPENSHIFT_APP_NAME:3scale-proxy-policy}
   description: 3scale-proxy-policy
   version: 1
-  hostname: ${OPENSHIFT_HOST_NAME:openshift.raphael.lab.upshift.rdu2.redhat.com}
+  hostname: ${OPENSHIFT_HOST_NAME:apps.openshift.raphael.lab.upshift.rdu2.redhat.com}
 
 logging:
   config: classpath:logback.xml
@@ -72,15 +72,12 @@ opentracing:
     log-spans: true
     const-sampler:
       decision: true
-    udp-sender:
-      host: ${OPENSHIFT_JAEGER_HOST:localhost}
-      port: 6831
     http-sender:
       #url: http://jaeger-collector:14268/api/traces
       #url: http://jaeger-collector.microservices.svc.cluster.local:14268/api/traces
-      url: ${OPENSHIFT_JAEGER_TRACE_API_URL:http://localhost:14268/api/traces}
-      # password:
-      # username:
+      url: http://${OPENSHIFT_JAEGER_TRACE_HOST:jaeger-collector.microservices.svc.cluster.local}:${OPENSHIFT_JAEGER_TRACE_PORT:14268}/api/traces}
+      #password:
+      #username:
     expand-exception-logs: true
     remote-reporter:
       max-queue-size: 10000

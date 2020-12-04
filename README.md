@@ -10,7 +10,22 @@
 
 ## TESTING LOCALLY (WITHOUT 3SCALE)
 
-## OPENSHIFT DEPLOYMENT
+## DATAGRID DEPLOYMENT
+```
+IMAGESTREAM_NS=microservices
+
+oc create -f https://raw.githubusercontent.com/jboss-container-images/jboss-datagrid-7-openshift-image/7.3-v1.7/templates/datagrid73-image-stream.json -n $IMAGESTREAM_NS
+oc import-image jboss-datagrid73-openshift --from='registry.redhat.io/jboss-datagrid-7/datagrid73-openshift:1.7’ -n $IMAGESTREAM_NS
+
+oc new-app --name=datagrid-fuse-policy \
+ --image-stream=jboss-datagrid73-openshift:1.7 \
+ -e INFINISPAN_CONNECTORS=hotrod \
+ -e CACHE_NAMES=default \
+ -e HOTROD_SERVICE_NAME=policy-hotrod \
+ -e AB_PROMETHEUS_ENABLE=true
+```
+
+## APPLICATION DEPLOYMENT
 ```
 export MSA_PROJECT_NAMESPACE=microservices
 oc delete all,bc,secret,is,svc,cm -lapp=proxy-policy-api -n ${MSA_PROJECT_NAMESPACE}
@@ -79,7 +94,9 @@ echo "
 " | oc create -f - -n ${PROJECT_NAMESPACE}
 
 # there's no need to expose the policy service (it will be used as internal cluster communication)
+```
 
+## DEPLOYMENT CONFIG. VARIABLES SETUP
 KEYSTORE_PASSWORD=$(openssl rand -base64 512 | tr -dc A-Z-a-z-0-9 | head -c 25)
 keytool -genkeypair -keyalg RSA -keysize 2048 -dname CN="*.$OCP_DOMAIN" -alias https-key -keystore keystore.jks -storepass ${KEYSTORE_PASSWORD}
 echo ${KEYSTORE_PASSWORD}
@@ -93,15 +110,25 @@ oc create configmap policy-api-keystore-config --from-file=./keystore.jks -n ${P
 oc set volume dc/${APP} --add --overwrite --name=policy-api-config-volume -m /deployments/data -t configmap --configmap-name=policy-api-keystore-config -n ${PROJECT_NAMESPACE}
 oc set env dc/${APP} --overwrite OPENSHIFT_PROXY_KEYSTORE_PASSWORD=${KEYSTORE_PASSWORD} -n ${PROJECT_NAMESPACE}
 
-oc set env dc/${APP} --overwrite OPENSHIFT_PROXY_SCHEMA=netty4-http -n ${PROJECT_NAMESPACE}
-oc set env dc/${APP} --overwrite OPENSHIFT_PROXY_DESTINATION_SCHEMA=netty4-http -n ${PROJECT_NAMESPACE}
-oc set env dc/${APP} --overwrite OPENSHIFT_PROXY_PORT=8443 -n ${PROJECT_NAMESPACE}
-oc set env dc/${APP} --overwrite OPENSHIFT_JETTY_KEYSTORE_PASSWORD=77z9SYEGhSovlsBkALpko0BUb -n ${PROJECT_NAMESPACE}
+oc set env dc/${APP} --overwrite OPENSHIFT_APP_NAME=${APP} -n ${PROJECT_NAMESPACE}
+oc set env dc/${APP} --overwrite OPENSHIFT_HOST_NAME=${OCP_DOMAIN} -n ${PROJECT_NAMESPACE}
+oc set env dc/${APP} --overwrite OPENSHIFT_JAEGER_TRACE_HOST=jaeger-collector.microservices.svc.cluster.local -n ${PROJECT_NAMESPACE}
+oc set env dc/${APP} --overwrite OPENSHIFT_JAEGER_TRACE_PORT=14268 -n ${PROJECT_NAMESPACE}
+
+oc set env dc/${APP} --overwrite INFINISPAN_SERVICE_NAMESPACE=microservices -n ${PROJECT_NAMESPACE}
+oc set env dc/${APP} --overwrite INFINISPAN_APP_NAME=datagrid-fuse-policy -n ${PROJECT_NAMESPACE}
+
+oc set env dc/${APP} --overwrite FUSE_PROXY_KEYSTORE_PASSWORD=49CNOIPBvFh6b9yKpzK9PKCr1 -n ${PROJECT_NAMESPACE}
+oc set env dc/${APP} --overwrite FUSE_PROXY_DEBUG_HEADERS=true -n ${PROJECT_NAMESPACE}
+
+oc set env dc/${APP} --overwrite POLICY_IP_RATE_LIMIT_MAX_HIT_COUNT=10 -n ${PROJECT_NAMESPACE}
+oc set env dc/${APP} --overwrite POLICY_IP_RATE_LIMIT_TIME_WINDOW=60000 -n ${PROJECT_NAMESPACE}
+oc set env dc/${APP} --overwrite POLICY_IP_RATE_LIMIT_X_FORWARDED_FOR="10.6.128.23,200.164.107.55" -n ${PROJECT_NAMESPACE}
+oc set env dc/${APP} --overwrite POLICY_IP_RATE_LIMIT_WHITE_LIST_IPS= -n ${PROJECT_NAMESPACE}
+
 oc rollout resume dc ${APP} -n ${PROJECT_NAMESPACE}
 
 curl -k -vvv "https://sample-production.apps.raphael.lab.upshift.rdu2.redhat.com/get" -H 'user_key: 38c6657cd5dee0a4a5c1dd5805dd482a'
 ```
-
-## OPENSHIFT DEPLOYMENT CONFIG. VARIABLES SETUP
 
 ### REFERENCES
