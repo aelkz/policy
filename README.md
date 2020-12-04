@@ -1,5 +1,6 @@
 # 3scale custom policy
-`ip-rate limit with JBoss Data Grid` , `opentracing with jaeger` , `actuator metrics` , `prometheus metrics`
+**features:** `ip-rate limit with JBoss Data Grid` , `opentracing with jaeger` , `actuator metrics` , `prometheus metrics`<br>
+**tags:** `opentracing` `jaeger` `fuse77` `prometheus` `actuator` `datagrid` `java8`
 
 ## PRE-REQUISITES
 
