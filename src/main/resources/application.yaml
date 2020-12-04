@@ -60,6 +60,10 @@ management:
 # =============================================
 # opentracing configurations
 # ---------------------------------------------
+# =============================================
+# opentracing configurations
+# see: https://github.com/opentracing-contrib/java-spring-jaeger/blob/master/README.md
+# ---------------------------------------------
 opentracing:
   jaeger:
     enabled: true
@@ -68,9 +72,13 @@ opentracing:
     log-spans: true
     const-sampler:
       decision: true
+    udp-sender:
+      host: ${OPENSHIFT_JAEGER_HOST:localhost}
+      port: 6831
     http-sender:
       #url: http://jaeger-collector:14268/api/traces
-      url: ${OPENSHIFT_JAEGER_TRACE_API_URL:jaeger-collector.microservices.svc.cluster.local:14268/api/traces}
+      #url: http://jaeger-collector.microservices.svc.cluster.local:14268/api/traces
+      url: ${OPENSHIFT_JAEGER_TRACE_API_URL:http://localhost:14268/api/traces}
       # password:
       # username:
     expand-exception-logs: true
@@ -81,7 +89,6 @@ opentracing:
       - 3scale
       - proxy
       - ip-rate-limit
-    include-jaeger-env-tags: false
 
 # =============================================
 # datagrid configurations
@@ -91,9 +98,9 @@ infinispan:
     host: ${INFINISPAN_APP_NAME:datagrid-fuse-policy}.${INFINISPAN_SERVICE_NAMESPACE:rh-datagrid-73}.svc:9990
   client:
     hotrod:
-      #username:
-      #password:
-      use-authn: false
+      username: ${INFINISPAN_HOTROD_USERNAME:}
+      password: ${INFINISPAN_HOTROD_PASSWORD:}
+      use-authn: ${INFINISPAN_HOTROD_AUTHN_ENABLED:false}
       connection-timeout: ${INFINISPAN_HOTROD_CONNECTION_TIMEOUT:5000}
       socket-timeout: ${INFINISPAN_HOTROD_SOCKET_TIMEOUT:5000}
       max-retries: ${INFINISPAN_HOTROD_MAX_RETRIES:3}
@@ -116,7 +123,7 @@ custom:
       #dest: ${FUSE_PROXY_KEYSTORE_DESTINATION:/deployments/data/keystore.jks}
       #pass: ${FUSE_PROXY_KEYSTORE_PASSWORD:changeme}
       dest: ${FUSE_PROXY_KEYSTORE_DESTINATION:/deployments/data/keystore.jks}
-      pass: ${FUSE_PROXY_KEYSTORE_PASSWORD:changeme}
+      pass: ${FUSE_PROXY_KEYSTORE_PASSWORD:49CNOIPBvFh6b9yKpzK9PKCr1}
     debug-headers: ${FUSE_PROXY_DEBUG_HEADERS:true}
   policy:
     ip-rate-limit:

@@ -7,7 +7,6 @@ import java.util.logging.Logger;
 import com.redhat.api.policy.configuration.PolicyConfig;
 import com.redhat.api.policy.configuration.SSLProxyConfig;
 import com.redhat.api.policy.enumerator.ApplicationEnum;
-import com.redhat.api.policy.processor.JeagerTagProcessor;
 import org.apache.camel.Exchange;
 import org.apache.camel.Message;
 import org.apache.camel.builder.RouteBuilder;
@@ -80,7 +79,6 @@ public class ProxyRoute extends RouteBuilder {
                     + proxyConfig.getProducerQuery())
                     .id("proxy-endpoint-request")
                 .log(":: request forwarded to backend")
-                .process(new JeagerTagProcessor("X-Forwarded-For", simple("${header.X-Forwarded-For}"))).id("opentracing:before-endpoint-request")
             .endDoTry()
             .doCatch(Exception.class)
                 .log(":: Exception :: direct-internal-redirect :: upstream service unavailable")

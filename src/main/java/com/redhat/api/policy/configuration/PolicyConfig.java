@@ -15,7 +15,7 @@ public class PolicyConfig {
     @Value("${custom.policy.ip-rate-limit.time-window}")
     private Integer timeWindow;
 
-    @Value("${custom.policy.ip-address-whitelist}")
+    @Value("${custom.policy.ip-rate-limit.ip-address-whitelist}")
     private String ipWhitelist;
 
     public Integer getMaxHitCount() {

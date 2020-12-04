@@ -14,8 +14,10 @@ public class DebugHeaderProcessor implements Processor {
 
     private static final Logger LOGGER = Logger.getLogger(DebugHeaderProcessor.class.getName());
 
-    private final String header;
-    private final Expression expression;
+    private String header;
+    private Expression expression;
+
+    public DebugHeaderProcessor() { }
 
     public DebugHeaderProcessor(String header, Expression expression) {
         this.header = header;
@@ -36,5 +38,13 @@ public class DebugHeaderProcessor implements Processor {
 
     public Expression getExpression() {
         return expression;
+    }
+
+    public void setHeader(String header) {
+        this.header = header;
+    }
+
+    public void setExpression(Expression expression) {
+        this.expression = expression;
     }
 }

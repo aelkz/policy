@@ -14,9 +14,11 @@ public class DebugHeaderRemainingHitsProcessor implements Processor {
 
     private static final Logger LOGGER = Logger.getLogger(DebugHeaderRemainingHitsProcessor.class.getName());
 
-    private final String header;
-    private final Integer maxPolicyHits;
-    private final Expression expression;
+    private String header;
+    private Integer maxPolicyHits;
+    private Expression expression;
+
+    public  DebugHeaderRemainingHitsProcessor() { }
 
     public DebugHeaderRemainingHitsProcessor(String header, Integer maxPolicyHits, Expression expression) {
         this.header = header;
@@ -40,5 +42,21 @@ public class DebugHeaderRemainingHitsProcessor implements Processor {
 
     public Expression getExpression() {
         return expression;
+    }
+
+    public void setHeader(String header) {
+        this.header = header;
+    }
+
+    public Integer getMaxPolicyHits() {
+        return maxPolicyHits;
+    }
+
+    public void setMaxPolicyHits(Integer maxPolicyHits) {
+        this.maxPolicyHits = maxPolicyHits;
+    }
+
+    public void setExpression(Expression expression) {
+        this.expression = expression;
     }
 }
