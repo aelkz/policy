@@ -29,6 +29,8 @@ public class JeagerTagProcessor implements Processor, Traceable, IdAware {
     @Override
     public void process(Exchange exchange) throws Exception {
         try {
+            Holder holder = (Holder) exchange.getProperty(ACTIVE_SPAN_PROPERTY);
+            
             Span camelSpan = (Span) ActiveSpanManager.getSpan(exchange);
             if (camelSpan != null) {
                 String tag = expression.evaluate(exchange, String.class);

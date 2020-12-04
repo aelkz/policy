@@ -38,7 +38,7 @@ public class CacheRoute extends RouteBuilder {
             .routeId("get-hit-count-route")
             .setHeader(InfinispanConstants.OPERATION, constant(InfinispanOperation.GET))
             .setHeader(InfinispanConstants.KEY, simple("${exchangeProperty." + ProxyRoute.CLIENT_IP + "}"))
-            .process(new JeagerTagProcessor("X-Forwarded-For", simple("${header.X-Forwarded-For}"))).id("opentracing:before-infinispan-request")
+            .log(":: request forwarded to datagrid :: PUT KEY :: " + simple("${exchangeProperty." + ProxyRoute.CLIENT_IP + "}"))
             .to("infinispan://{{custom.rhdg.cache.name}}?cacheContainer=#cacheContainer")
             .process(rateLimitProcessor);
 
@@ -46,16 +46,19 @@ public class CacheRoute extends RouteBuilder {
             .routeId("increment-hit-count-route")
             .setHeader(InfinispanConstants.OPERATION, constant(InfinispanOperation.GET))
             .setHeader(InfinispanConstants.KEY, simple("${exchangeProperty." + ProxyRoute.CLIENT_IP + "}-" + CacheRoute.HIT_TIMESTAMP))
+            .log(":: request forwarded to datagrid :: GET KEY " +  simple("${exchangeProperty." + ProxyRoute.CLIENT_IP + "}-" + CacheRoute.HIT_TIMESTAMP))
             .to("infinispan:{{custom.rhdg.cache.name}}?cacheContainer=#cacheContainer")
             .process(rateLimitStorageProcessor)
             // TODO - implementar condicional para evitar atualização sem necessidade
             .setHeader(InfinispanConstants.OPERATION, constant(InfinispanOperation.PUT))
             .setHeader(InfinispanConstants.KEY, simple("${exchangeProperty." + ProxyRoute.CLIENT_IP + "}-" + CacheRoute.HIT_TIMESTAMP))
             .setHeader(InfinispanConstants.VALUE, simple("${header." + CacheRoute.HIT_TIMESTAMP + "}"))
+            .log(":: request forwarded to datagrid :: PUT KEY " + simple("${exchangeProperty." + ProxyRoute.CLIENT_IP + "}-" + CacheRoute.HIT_TIMESTAMP))
             .to("infinispan:{{custom.rhdg.cache.name}}?cacheContainer=#cacheContainer")
             .setHeader(InfinispanConstants.OPERATION, constant(InfinispanOperation.PUT))
             .setHeader(InfinispanConstants.KEY, simple("${exchangeProperty." + ProxyRoute.CLIENT_IP + "}"))
             .setHeader(InfinispanConstants.VALUE, simple("${exchangeProperty." + CacheRoute.HIT_COUNT_TOTAL + "}"))
+            .log(":: request forwarded to datagrid :: PUT KEY " + simple("${exchangeProperty." + ProxyRoute.CLIENT_IP + "}"))
             .to("infinispan:{{custom.rhdg.cache.name}}?cacheContainer=#cacheContainer")
             .setBody(constant(""));
 }
