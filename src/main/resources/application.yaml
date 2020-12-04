@@ -3,22 +3,21 @@
 # ---------------------------------------------
 spring:
   application:
-    name: ${OPENSHIFT_APP_NAME:openbanking-proxy-policy}
+    name: ${OPENSHIFT_APP_NAME:3scale-proxy-policy}
   datasource:
     initialization-mode: never
 
 api:
-  title: ${OPENSHIFT_APP_NAME:openbanking-proxy-policy}
+  title: ${OPENSHIFT_APP_NAME:3scale-proxy-policy}
   description: 3scale-proxy-policy
   version: 1
-  hostname: ${OPENSHIFT_HOST_NAME:openbanking-proxy-policy.apps.openshift.com}
+  hostname: ${OPENSHIFT_HOST_NAME:openshift.raphael.lab.upshift.rdu2.redhat.com}
 
 logging:
   config: classpath:logback.xml
   level:
     root: INFO
 
-# options from org.apache.camel.spring.boot.CamelConfigurationProperties can be configured here
 camel:
   health:
     check:
@@ -29,22 +28,19 @@ camel:
       service:
         enabled: true
   springboot:
-    name: ${OPENSHIFT_APP_NAME:openbanking-proxy-policy}
+    name: ${OPENSHIFT_APP_NAME:3scale-proxy-policy}
     main-run-controller: true
   component:
     jmxEnabled: true
 
-# lets listen on all ports to ensure we can be invoked from the pod ip address
 server:
   address: 0.0.0.0
   port: ${SERVER_PORT:8090}
 
-# lets use a different management port in case you need to listen to HTTP requests on 8080
 management:
   security:
     enabled: false
   server:
-    # default health-check probe port: 8081
     port: 8081
     address: 0.0.0.0
   endpoints:
@@ -63,19 +59,18 @@ management:
 
 # =============================================
 # opentracing configurations
-# see: https://github.com/opentracing-contrib/java-spring-jaeger/blob/master/README.md
 # ---------------------------------------------
 opentracing:
   jaeger:
     enabled: true
-    service-name: ${OPENSHIFT_APP_NAME:openbanking-proxy-policy}
+    service-name: ${OPENSHIFT_APP_NAME:3scale-proxy-policy}
     enable-b3-propagation: true
     log-spans: true
     const-sampler:
       decision: true
     http-sender:
       #url: http://jaeger-collector:14268/api/traces
-      url: ${OPENSHIFT_JAEGER_TRACE_API_URL:http://localhost:14268/api/traces}
+      url: ${OPENSHIFT_JAEGER_TRACE_API_URL:jaeger-collector.microservices.svc.cluster.local:14268/api/traces}
       # password:
       # username:
     expand-exception-logs: true
@@ -83,49 +78,50 @@ opentracing:
       max-queue-size: 10000
       flush-interval: 1000
     tags:
-      - openbanking
+      - 3scale
       - proxy
       - ip-rate-limit
     include-jaeger-env-tags: false
 
 # =============================================
+# datagrid configurations
+# ---------------------------------------------
+infinispan:
+  health:
+    host: ${INFINISPAN_APP_NAME:datagrid-fuse-policy}.${INFINISPAN_SERVICE_NAMESPACE:rh-datagrid-73}.svc:9990
+  client:
+    hotrod:
+      #username:
+      #password:
+      use-authn: false
+      connection-timeout: ${INFINISPAN_HOTROD_CONNECTION_TIMEOUT:5000}
+      socket-timeout: ${INFINISPAN_HOTROD_SOCKET_TIMEOUT:5000}
+      max-retries: ${INFINISPAN_HOTROD_MAX_RETRIES:3}
+      server-list: ${INFINISPAN_APP_NAME:datagrid-fuse-policy}.${INFINISPAN_SERVICE_NAMESPACE:rh-datagrid-73}.svc:11222
+      trust-store-path: ${SERVICE_CA_PATH:/var/run/secrets/kubernetes.io/serviceaccount/service-ca.crt}
+      host: ${INFINISPAN_APP_NAME:datagrid-fuse-policy}.${INFINISPAN_SERVICE_NAMESPACE:rh-datagrid-73}.svc
+      port: ${INFINISPAN_HOTROD_PORT:11222}
+      cache: ${INFINISPAN_CACHE:default}
+
+# =============================================
 # custom configurations
 # ---------------------------------------------
 custom:
+  proxy:
+    consumer: ${FUSE_PROXY_CONSUMER_COMPONENT:netty4-http}
+    producer: ${FUSE_PROXY_PRODUCER_COMPONENT:http4}
+    port: ${FUSE_PROXY_PORT:8443}
+    producer-query: ${FUSE_PRODUCER_QUERY:?connectionClose=false&bridgeEndpoint=true&copyHeaders=true}
+    keystore:
+      #dest: ${FUSE_PROXY_KEYSTORE_DESTINATION:/deployments/data/keystore.jks}
+      #pass: ${FUSE_PROXY_KEYSTORE_PASSWORD:changeme}
+      dest: ${FUSE_PROXY_KEYSTORE_DESTINATION:/deployments/data/keystore.jks}
+      pass: ${FUSE_PROXY_KEYSTORE_PASSWORD:changeme}
+    debug-headers: ${FUSE_PROXY_DEBUG_HEADERS:true}
   policy:
-    ipratelimit:
-      maxhitcount: ${MAX_IP_HIT_COUNT:10}
+    ip-rate-limit:
+      max-hit-count: ${POLICY_IP_RATE_LIMIT_MAX_HIT_COUNT:10}
       # milliseconds time window for external requests
-      timeWindow: ${TIME_WINDOW:30000}
-  dev:
-    env: ${DEV_ENV:true}
-  endpoint:
-  rhdg:
-    cache:
-      name: ${CACHE_NAME:default}
-    health:
-      check:
-        host: ${JDG_APP_NAME:datagrid-fuse-policy}.${JDG_SERVICE_NAMESPACE:rh-datagrid-73}.svc:9990
-
-# =============================================
-# datagrid configurations
-# Native Keys of API. With this keys is possible to send the properties file as parameter in ConfigurationBuilder.
-# see (configurationBuilder.withProperties(file properties);)
-# ---------------------------------------------
-infinispan:
-  client:
-    hotrod:
-      #auth_server_name:
-      #auth_username:
-      #auth_password:
-      #use_auth: false
-      connect_timeout: ${RHDG_HOTROD_CONN_TIMEOUT:5000}
-      socket_timeout: ${RHDG_HOTROD_SOCKET_TIMEOUT:5000}
-      max_retries: 5
-      server_list: ${JDG_APP_NAME:datagrid-fuse-policy}.${JDG_SERVICE_NAMESPACE:rh-datagrid-73}.svc:11222
-  hotrod:
-    trustStoreFileName: ${SERVICE_CA:/var/run/secrets/kubernetes.io/serviceaccount/service-ca.crt}
-    host: ${JDG_APP_NAME:datagrid-fuse-policy}.${JDG_SERVICE_NAMESPACE:rh-datagrid-73}.svc
-    port: ${JDG_HOTROD_PORT:11222}
-    username:
-    password:
+      # 60s = 60000ms
+      time-window: ${POLICY_IP_RATE_LIMIT_TIME_WINDOW:60000}
+      ip-address-whitelist: ${POLICY_IP_RATE_LIMIT_IP_WHITELIST:10.6.128.23,200.164.107.55}

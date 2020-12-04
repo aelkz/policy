@@ -1,6 +1,5 @@
-package com.redhat.api.policy.ipratelimit.processor;
+package com.redhat.api.policy.processor;
 
-import io.opentracing.Tracer;
 import org.apache.camel.Exchange;
 import org.apache.camel.Expression;
 import org.apache.camel.Processor;
@@ -13,7 +12,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import io.opentracing.Span;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
 
+@Component
 public class JeagerTagProcessor implements Processor, Traceable, IdAware {
 
     static final Logger logger = LoggerFactory.getLogger(JeagerTagProcessor.class);
@@ -36,13 +37,13 @@ public class JeagerTagProcessor implements Processor, Traceable, IdAware {
     public void process(Exchange exchange) throws Exception {
         try {
             // metodo 1
-            tracer.init(context);
+            // tracer.init(context);
             Span span = tracer.getTracer().activeSpan();
             // metodo 2
             Span camelSpan = (Span) ActiveSpanManager.getSpan(exchange);
 
             if (camelSpan != null) {
-                String tag = expression.evaluate(exchange, String.class);
+                String tag = expression.evaluate(exchange, String.class); // will throw RuntimeException if not String.class
                 camelSpan.setTag(tagName, tag);
                 //camelSpan.setOperationName("proxy-ip-rate-limits");
             } else {

@@ -1,4 +1,4 @@
-package com.redhat.api.policy.ipratelimit.dto;
+package com.redhat.api.policy.dto;
 
 import java.io.Serializable;
 import java.util.LinkedList;
@@ -13,16 +13,19 @@ public class HitCountStorageDTO implements Serializable {
         return ip;
     }
 
-    public void setIp(String ip) {
-        this.ip = ip;
-    }
-
-    public LinkedList<Long> getTimestamps() {
+    public LinkedList<Long> getTimestampRecords() {
         return timestamps;
     }
 
-    public void setTimestamps(LinkedList<Long> timestamps) {
+    public HitCountStorageDTO withIp(String ip) {
+        this.ip = ip;
+        return this;
+    }
+
+    public HitCountStorageDTO withTimestampRecords(
+            LinkedList<Long> timestamps) {
         this.timestamps = timestamps;
+        return this;
     }
 
     @Override

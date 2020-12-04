@@ -1,4 +1,4 @@
-package com.redhat.api.policy.ipratelimit.dto;
+package com.redhat.api.policy.dto;
 
 import java.io.Serializable;
 
@@ -17,20 +17,32 @@ public class HitCountDTO implements Serializable {
         return hitCount;
     }
 
-    public void setHitCount(Integer hitCount) {
-        this.hitCount = hitCount;
-    }
-
-    public void setIp(String ip) {
-        this.ip = ip;
-    }
-
     public Long getTimeStamp() {
         return timeStamp;
     }
 
-    public void setTimeStamp(Long timeStamp) {
+    public HitCountDTO increase() {
+        this.hitCount = hitCount+1;
+        return this;
+    }
+
+    public HitCountDTO withHitCount(Integer hitCount) {
+        this.hitCount = hitCount;
+        return this;
+    }
+
+    public HitCountDTO withIp(String ip) {
+        this.ip = ip;
+        return this;
+    }
+
+    public HitCountDTO withTimeStamp(Long timeStamp) {
         this.timeStamp = timeStamp;
+        return this;
+    }
+
+    public Boolean isEmpty() {
+        return getHitCount() == null || getHitCount() == 0;
     }
 
     @Override

@@ -1,4 +1,4 @@
-package com.redhat.api.policy.ipratelimit.repository;
+package com.redhat.api.policy.repository;
 
 import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
