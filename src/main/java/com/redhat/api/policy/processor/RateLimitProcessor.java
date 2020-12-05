@@ -22,7 +22,7 @@ public class RateLimitProcessor implements Processor {
 
     @Override
     public void process(Exchange exchange) throws RateLimitException {
-        LOGGER.info(":: RateLimitProcessor.process(Exchange exchange) throws RateLimitException called");
+        LOGGER.info(":: method: process(Exchange exchange) called");
         LOGGER.info("\t:: key.value = [" + exchange.getIn().getHeader(InfinispanConstants.KEY) + "," + exchange.getIn().getBody(String.class) + "]");
 
         HitCountDTO record = new HitCountDTO(); // must initialize it first
@@ -37,10 +37,10 @@ public class RateLimitProcessor implements Processor {
             } else if (record.getHitCount() >= policyConfig.getMaxHitCount()) {
                 throw new RateLimitException(record.getIp());
             }
-        } catch (Exception ex){
-            LOGGER.severe(ApplicationEnum.GENERAL_PROXY_ERROR_MESSAGE.getValueWithMessage(ex.getMessage()));
+        // catch (Excption e) {} -> block not allowed here!
         } finally {
             record.increase();
+
             exchange.getIn().setBody("");
             exchange.setProperty(ApplicationEnum.HIT_COUNT.getValue(), record);
             LOGGER.info("\t:: ip [" + record.getIp() + "] hits [" + record.getHitCount() + "] at " + record.getTimeStamp());

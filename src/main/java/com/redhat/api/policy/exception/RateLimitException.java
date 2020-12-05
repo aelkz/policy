@@ -9,7 +9,7 @@ public class RateLimitException extends Exception{
 	}
 
 	public RateLimitException(String ip){
-		super(RATE_LIMIT_REACHED_MESSAGE+"\t"+ip);
+		super(RATE_LIMIT_REACHED_MESSAGE + " [" + ip + "]");
 	}
 
 	public RateLimitException(String message, String ip){

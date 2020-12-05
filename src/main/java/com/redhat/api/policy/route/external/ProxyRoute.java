@@ -78,7 +78,7 @@ public class ProxyRoute extends RouteBuilder {
         from("direct:internal-redirect")
             .process(ProxyRoute::remoteAddressFilter)
             .to("direct:policy")
-            .wireTap("direct:increment-hit-count")
+            .to("direct:increment-hit-count")
             .doTry()
                 .toD(proxyConfig.getProducer()+":"
                     + ("http4".equals(proxyConfig.getProducer()) ? "//" : "${header." + Exchange.HTTP_SCHEME + "}://")
@@ -89,7 +89,7 @@ public class ProxyRoute extends RouteBuilder {
                 .log(":: request forwarded to backend")
             .endDoTry()
             .doCatch(Exception.class)
-                .log(":: Exception :: direct-internal-redirect :: upstream service unavailable")
+                .log( LoggingLevel.ERROR, LOGGER, ":: Exception :: direct-internal-redirect :: upstream service unavailable")
                 .process(ProxyRoute::serviceUnavailable)
             .end();
     }
@@ -117,7 +117,7 @@ public class ProxyRoute extends RouteBuilder {
     }
 
     private static void remoteAddressFilter(final Exchange exchange) {
-        LOGGER.info("private static void clientIpFilter(final Exchange exchange) called");
+        LOGGER.info(":: method: clientIpFilter(final Exchange exchange) called");
 
         Object xForwardedFor = exchange.getIn().getHeader("X-Forwarded-For");
         ArrayList<String> ipList = new ArrayList<String>();
@@ -139,14 +139,14 @@ public class ProxyRoute extends RouteBuilder {
           ips = ips.substring(0, ips.length()-1);
         }
 
-        LOGGER.info("\t:: "+ApplicationEnum.CLIENT_IP.getValue() + " with value: " + ips);
+        LOGGER.info("\t:: "+ApplicationEnum.CLIENT_IP.getValue() + " -> " + ips);
         exchange.setProperty(ApplicationEnum.CLIENT_IP.getValue(), ips);
     }
 
     private static void serviceUnavailable(final Exchange exchange) {
-        LOGGER.info("private static void serviceUnavailable(final Exchange exchange) called");
+        LOGGER.info(":: method: serviceUnavailable(final Exchange exchange) called");
 
-        LOGGER.info(":: http.status.code=503");
+        LOGGER.error("\t:: http.status.code=503");
         final Message message = exchange.getIn();
         message.setFault(true);
         message.setHeader(Exchange.HTTP_RESPONSE_CODE, 503);

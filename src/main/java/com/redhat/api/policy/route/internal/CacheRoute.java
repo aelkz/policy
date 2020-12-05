@@ -1,6 +1,7 @@
 package com.redhat.api.policy.route.internal;
 
-import java.util.logging.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.redhat.api.policy.configuration.PolicyConfig;
 import com.redhat.api.policy.configuration.SSLProxyConfig;
@@ -10,6 +11,7 @@ import com.redhat.api.policy.processor.*;
 
 import com.redhat.api.policy.route.external.ProxyRoute;
 import org.apache.camel.Exchange;
+import org.apache.camel.LoggingLevel;
 import org.apache.camel.Message;
 import org.apache.camel.builder.RouteBuilder;
 import org.apache.camel.component.infinispan.InfinispanConstants;
@@ -20,7 +22,7 @@ import org.springframework.stereotype.Component;
 @Component("policy-ip-rate-limit")
 public class CacheRoute extends RouteBuilder {
 
-    private static final Logger LOGGER = Logger.getLogger(ProxyRoute.class.getName());
+    private static final Logger LOGGER = LoggerFactory.getLogger(CacheRoute.class);
 
     @Autowired
     private RateLimitProcessor rateLimitProcessor;
@@ -46,11 +48,11 @@ public class CacheRoute extends RouteBuilder {
             .doTry()
                 .setHeader(InfinispanConstants.OPERATION, constant(InfinispanOperation.GET))
                 .setHeader(InfinispanConstants.KEY, simple("${exchangeProperty." + ApplicationEnum.CLIENT_IP.getValue() + "}"))
-                .log(":: request forwarded to datagrid :: PUT#01 :: " + "${exchangeProperty." + ApplicationEnum.CLIENT_IP.getValue() + "}")
+                .log(":: JBoss Data Grid :: PUT#01 :: " + "${exchangeProperty." + ApplicationEnum.CLIENT_IP.getValue() + "}")
                 .to("infinispan://{{infinispan.client.hotrod.cache}}?cacheContainer=#cacheContainer")
             .endDoTry()
             .doCatch(Exception.class)
-                .log(":: Exception :: direct:policy :: datagrid service unavailable")
+                .log(":: Exception :: direct:policy :: infinispan service unavailable")
                 .process(CacheRoute::serviceUnavailable)
             .end()
 
@@ -58,9 +60,10 @@ public class CacheRoute extends RouteBuilder {
                 .process(rateLimitProcessor)
             .endDoTry()
             .doCatch(RateLimitException.class)
-                .wireTap("direct:increment-hit-count")
+                .log(LoggingLevel.ERROR, LOGGER, ":: RateLimitException trowed")
                 .process(CacheRoute::sendRateLimitError)
-            .end();
+            .end()
+            .to("direct:increment-hit-count");
 
         // /--------------------------------------------------\
         // | evaluate and compute remote address hits         |
@@ -70,7 +73,7 @@ public class CacheRoute extends RouteBuilder {
             .routeId("increment-hit-count-route")
             .setHeader(InfinispanConstants.OPERATION, constant(InfinispanOperation.GET))
             .setHeader(InfinispanConstants.KEY, simple("${exchangeProperty." + ApplicationEnum.CLIENT_IP.getValue() + "}-" + ApplicationEnum.HIT_TIMESTAMP.getValue()))
-            .log(":: request forwarded to datagrid :: GET :: " +  simple("${exchangeProperty." + ApplicationEnum.CLIENT_IP.getValue() + "}-" + ApplicationEnum.HIT_TIMESTAMP.getValue()))
+            .log(":: infinispan :: GET :: " +  "${exchangeProperty." + ApplicationEnum.CLIENT_IP.getValue() + "}-" + ApplicationEnum.HIT_TIMESTAMP.getValue())
                 .to("infinispan:{{infinispan.client.hotrod.cache}}?cacheContainer=#cacheContainer")
                 .process(rateLimitStorageProcessor)
             .multicast().parallelProcessing()
@@ -79,13 +82,13 @@ public class CacheRoute extends RouteBuilder {
                     .setHeader(InfinispanConstants.OPERATION, constant(InfinispanOperation.PUT))
                     .setHeader(InfinispanConstants.KEY, simple("${exchangeProperty." + ApplicationEnum.CLIENT_IP.getValue() + "}-" + ApplicationEnum.HIT_TIMESTAMP.getValue()))
                     .setHeader(InfinispanConstants.VALUE, simple("${header." + ApplicationEnum.HIT_TIMESTAMP.getValue() + "}"))
-                        .log(":: request forwarded to datagrid :: PUT#02 :: " + simple("${exchangeProperty." + ApplicationEnum.CLIENT_IP.getValue() + "}-" + ApplicationEnum.HIT_TIMESTAMP.getValue()))
+                        .log(":: infinispan :: PUT#02 :: " + "${exchangeProperty." + ApplicationEnum.CLIENT_IP.getValue() + "}-" + ApplicationEnum.HIT_TIMESTAMP.getValue())
                         .to("infinispan:{{infinispan.client.hotrod.cache}}?cacheContainer=#cacheContainer")
                 .pipeline()
                     .setHeader(InfinispanConstants.OPERATION, constant(InfinispanOperation.PUT))
                     .setHeader(InfinispanConstants.KEY, simple("${exchangeProperty." + ApplicationEnum.CLIENT_IP.getValue() + "}"))
                     .setHeader(InfinispanConstants.VALUE, simple("${exchangeProperty." + ApplicationEnum.HIT_COUNT_TOTAL.getValue() + "}"))
-                        .log(":: request forwarded to datagrid :: PUT#03 :: " + simple("${exchangeProperty." + ApplicationEnum.CLIENT_IP.getValue() + "}"))
+                        .log(":: infinispan :: PUT#03 :: " + "${exchangeProperty." + ApplicationEnum.CLIENT_IP.getValue() + "}")
                         .to("infinispan:{{infinispan.client.hotrod.cache}}?cacheContainer=#cacheContainer")
 
             .setBody(constant(""))
@@ -100,7 +103,7 @@ public class CacheRoute extends RouteBuilder {
     }
 
     private static void sendRateLimitError(final Exchange exchange) {
-        LOGGER.info("private static void sendRateLimitError(final Exchange exchange) called");
+        LOGGER.info(":: method: sendRateLimitError(final Exchange exchange) called");
         LOGGER.info("\t:: http.status.code=429");
 
         final Message message = exchange.getIn();
@@ -110,7 +113,7 @@ public class CacheRoute extends RouteBuilder {
     }
 
     private static void serviceUnavailable(final Exchange exchange) {
-        LOGGER.info("private static void serviceUnavailable(final Exchange exchange) called");
+        LOGGER.info(":: method: serviceUnavailable(final Exchange exchange) called");
         LOGGER.info("\t:: http.status.code=503");
 
         final Message message = exchange.getIn();

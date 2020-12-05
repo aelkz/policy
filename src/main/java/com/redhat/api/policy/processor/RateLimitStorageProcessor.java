@@ -23,7 +23,7 @@ public class RateLimitStorageProcessor implements Processor {
 
     @Override
     public void process(Exchange exchange) throws Exception {
-        LOGGER.info(":: RateLimitStorageProcessor.process(Exchange exchange) throws Exception called");
+        LOGGER.info(":: method: process(Exchange exchange) called");
         LOGGER.info("\t:: key.value = [" + exchange.getIn().getHeader(InfinispanConstants.KEY) + "," + exchange.getIn().getBody(String.class) + "]");
 
         LinkedList<Long> response = (LinkedList<Long>) exchange.getIn().getBody();
@@ -49,7 +49,7 @@ public class RateLimitStorageProcessor implements Processor {
             entry.getTimestampRecords().add(hitCountDTO.getTimeStamp());
         }
 
-        LOGGER.info("\t:: ip [" + entry.getIp() + "] hits in current time-frame [" + entry.getTimestampRecords().size() + "]");
+        LOGGER.info("\t:: ip [" + entry.getIp() + "] with [" + entry.getTimestampRecords().size() + "] hits in current time-frame");
         hitCountDTO.withHitCount(entry.getTimestampRecords().size());
 
         exchange.setProperty(ApplicationEnum.HIT_COUNT_TOTAL.getValue(), hitCountDTO.getHitCount());
