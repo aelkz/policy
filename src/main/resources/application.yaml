@@ -16,7 +16,7 @@ api:
 logging:
   config: classpath:logback.xml
   level:
-    root: INFO
+    root: DEBUG
 
 camel:
   health:
@@ -64,6 +64,7 @@ management:
 # opentracing configurations
 # see: https://github.com/opentracing-contrib/java-spring-jaeger/blob/master/README.md
 # ---------------------------------------------
+
 opentracing:
   jaeger:
     enabled: true
@@ -72,10 +73,13 @@ opentracing:
     log-spans: true
     const-sampler:
       decision: true
+    udp-sender:
+      host: ${OPENSHIFT_JAEGER_TRACE_HOST:localhost}
+      port: 6831
     http-sender:
       #url: http://jaeger-collector:14268/api/traces
       #url: http://jaeger-collector.microservices.svc.cluster.local:14268/api/traces
-      url: http://${OPENSHIFT_JAEGER_TRACE_HOST:jaeger-collector.microservices.svc.cluster.local}:${OPENSHIFT_JAEGER_TRACE_PORT:14268}/api/traces}
+      url: http://${OPENSHIFT_JAEGER_TRACE_HOST:localhost}:${OPENSHIFT_JAEGER_TRACE_PORT:14268}/api/traces}
       #password:
       #username:
     expand-exception-logs: true

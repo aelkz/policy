@@ -9,21 +9,22 @@ public class HitCountDTO implements Serializable {
     private Integer hitCount;
     private Long timeStamp;
 
-    public String getIp() {
-        return ip;
-    }
+    public HitCountDTO() { }
 
     public Integer getHitCount() {
         return hitCount;
+    }
+
+    public String getIp() {
+        return ip;
     }
 
     public Long getTimeStamp() {
         return timeStamp;
     }
 
-    public HitCountDTO increase() {
+    public void increase() {
         this.hitCount = hitCount+1;
-        return this;
     }
 
     public HitCountDTO withHitCount(Integer hitCount) {
@@ -43,37 +44,6 @@ public class HitCountDTO implements Serializable {
 
     public Boolean isEmpty() {
         return getHitCount() == null || getHitCount() == 0;
-    }
-
-    @Override
-    public int hashCode() {
-        final int prime = 31;
-        int result = 1;
-        result = prime * result + ((hitCount == null) ? 0 : hitCount.hashCode());
-        result = prime * result + ((ip == null) ? 0 : ip.hashCode());
-        return result;
-    }
-
-    @Override
-    public boolean equals(Object obj) {
-        if (this == obj)
-            return true;
-        if (obj == null)
-            return false;
-        if (getClass() != obj.getClass())
-            return false;
-        HitCountDTO other = (HitCountDTO) obj;
-        if (hitCount == null) {
-            if (other.hitCount != null)
-                return false;
-        } else if (!hitCount.equals(other.hitCount))
-            return false;
-        if (ip == null) {
-            if (other.ip != null)
-                return false;
-        } else if (!ip.equals(other.ip))
-            return false;
-        return true;
     }
 
 }

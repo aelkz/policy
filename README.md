@@ -6,9 +6,36 @@
 
 ## CONFIGURING 3SCALE
 
+## CONFIGURE APICAST PRODUCTION CACHE REFRESH INTERVAL
+```
+oc set dc/apicast-production .... APICAST_CONFIGURATION_CACHE # 300 for default value
+```
+
 ## TESTING W/ 3SCALE
+```
+# use production route (as jaeger will be configured only for apicast-production gtw)
+curl -k -vvv "https://openbanking-production.apps.raphael.lab.upshift.rdu2.redhat.com/get?user_key=2695b1d2bae74f8006a6d91c2fc4d407" # if using key as query param
+curl -k -vvv "https://sample-production.apps.raphael.lab.upshift.rdu2.redhat.com/get" -H 'user_key: 2695b1d2bae74f8006a6d91c2fc4d407' # if using key as http header
+```
+
 
 ## TESTING LOCALLY (WITHOUT 3SCALE)
+```
+docker run -d --name jaeger \
+  -e COLLECTOR_ZIPKIN_HTTP_PORT=9411 \
+  -p 5775:5775/udp \
+  -p 6831:6831/udp \
+  -p 6832:6832/udp \
+  -p 5778:5778 \
+  -p 16686:16686 \
+  -p 14268:14268 \
+  -p 14250:14250 \
+  -p 9411:9411 \
+  jaegertracing/all-in-one:1.20
+```
+
+Then, you can then navigate to `http://localhost:16686` to access the Jaeger UI.
+Then, you can start the container instance: `docker start <CONTAINER-ID>`
 
 ## DATAGRID DEPLOYMENT
 ```
@@ -55,8 +82,8 @@ oc new-app --template=${CUSTOM_TEMPLATE} \
  --param GIT_REPO=${APP_GIT} \
  --param APP_NAME=${APP} \
  --param GIT_REF=${APP_GIT_BRANCH} \
- --param IMAGE_STREAM_NAMESPACE=${PROJECT_NAMESPACE} \
- -n ${PROJECT_NAMESPACE} > installation_details.log ; cat installation_details.log
+ --param IMAGE_STREAM_NAMESPACE=${MSA_PROJECT_NAMESPACE} \
+ -n ${MSA_PROJECT_NAMESPACE} > installation_details.log ; cat installation_details.log
 
 echo "
   apiVersion: v1
@@ -91,9 +118,22 @@ echo "
       app: "${APP}"
     type: ClusterIP
     sessionAffinity: \"None\"
-" | oc create -f - -n ${PROJECT_NAMESPACE}
+" | oc create -f - -n ${MSA_PROJECT_NAMESPACE}
 
 # there's no need to expose the policy service (it will be used as internal cluster communication)
+```
+
+## DEPLOYMENT CONFIG. PROBES (FIX)
+If using the newest version (7.7.0.fuse-770012-redhat-00003) of fuse, actuator 8081 port is not exposed as it will be expected by default fuse 7.7 template,<br>
+so all probes from template needs to be updated to reflect new actuator endpoints.
+
+```
+oc rollout pause dc ${APP} -n ${MSA_PROJECT_NAMESPACE}
+oc set probe dc ${APP} --remove --liveness --readiness -n $MSA_PROJECT_NAMESPACE
+
+oc set probe dc ${APP} --readiness --failure-threshold 3 --initial-delay-seconds 10 --get-url=http://:8090/camel/health/check -n ${MSA_PROJECT_NAMESPACE}
+oc set probe dc ${APP} --liveness --failure-threshold 3 --initial-delay-seconds 180 --get-url=http://:8090/camel/health/check -n ${MSA_PROJECT_NAMESPACE}
+oc rollout resume dc ${APP} -n ${MSA_PROJECT_NAMESPACE}
 ```
 
 ## DEPLOYMENT CONFIG. VARIABLES SETUP
@@ -105,28 +145,27 @@ sudo mkdir -p /deployments/data
 sudo chown -R raphael: /deployments/
 sudo cp keystore.jks /deployments/data/keystore.jks
 
-oc rollout pause dc ${APP} -n ${PROJECT_NAMESPACE}
-oc create configmap policy-api-keystore-config --from-file=./keystore.jks -n ${PROJECT_NAMESPACE}
-oc set volume dc/${APP} --add --overwrite --name=policy-api-config-volume -m /deployments/data -t configmap --configmap-name=policy-api-keystore-config -n ${PROJECT_NAMESPACE}
-oc set env dc/${APP} --overwrite OPENSHIFT_PROXY_KEYSTORE_PASSWORD=${KEYSTORE_PASSWORD} -n ${PROJECT_NAMESPACE}
+oc rollout pause dc ${APP} -n ${MSA_PROJECT_NAMESPACE}
+oc create configmap policy-api-keystore-config --from-file=./keystore.jks -n ${MSA_PROJECT_NAMESPACE}
+oc set volume dc/${APP} --add --overwrite --name=policy-api-config-volume -m /deployments/data -t configmap --configmap-name=policy-api-keystore-config -n ${MSA_PROJECT_NAMESPACE}
+oc set env dc/${APP} --overwrite FUSE_PROXY_KEYSTORE_PASSWORD=${KEYSTORE_PASSWORD} -n ${MSA_PROJECT_NAMESPACE}
 
-oc set env dc/${APP} --overwrite OPENSHIFT_APP_NAME=${APP} -n ${PROJECT_NAMESPACE}
-oc set env dc/${APP} --overwrite OPENSHIFT_HOST_NAME=${OCP_DOMAIN} -n ${PROJECT_NAMESPACE}
-oc set env dc/${APP} --overwrite OPENSHIFT_JAEGER_TRACE_HOST=jaeger-collector.microservices.svc.cluster.local -n ${PROJECT_NAMESPACE}
-oc set env dc/${APP} --overwrite OPENSHIFT_JAEGER_TRACE_PORT=14268 -n ${PROJECT_NAMESPACE}
+oc set env dc/${APP} --overwrite OPENSHIFT_APP_NAME=${APP} -n ${MSA_PROJECT_NAMESPACE}
+oc set env dc/${APP} --overwrite OPENSHIFT_HOST_NAME=${OCP_DOMAIN} -n ${MSA_PROJECT_NAMESPACE}
+oc set env dc/${APP} --overwrite OPENSHIFT_JAEGER_TRACE_HOST=jaeger-collector.microservices.svc.cluster.local -n ${MSA_PROJECT_NAMESPACE}
+oc set env dc/${APP} --overwrite OPENSHIFT_JAEGER_TRACE_PORT=14268 -n ${MSA_PROJECT_NAMESPACE}
 
-oc set env dc/${APP} --overwrite INFINISPAN_SERVICE_NAMESPACE=microservices -n ${PROJECT_NAMESPACE}
-oc set env dc/${APP} --overwrite INFINISPAN_APP_NAME=datagrid-fuse-policy -n ${PROJECT_NAMESPACE}
+oc set env dc/${APP} --overwrite INFINISPAN_SERVICE_NAMESPACE=microservices -n ${MSA_PROJECT_NAMESPACE}
+oc set env dc/${APP} --overwrite INFINISPAN_APP_NAME=datagrid-fuse-policy -n ${MSA_PROJECT_NAMESPACE}
 
-oc set env dc/${APP} --overwrite FUSE_PROXY_KEYSTORE_PASSWORD=49CNOIPBvFh6b9yKpzK9PKCr1 -n ${PROJECT_NAMESPACE}
-oc set env dc/${APP} --overwrite FUSE_PROXY_DEBUG_HEADERS=true -n ${PROJECT_NAMESPACE}
+oc set env dc/${APP} --overwrite FUSE_PROXY_DEBUG_HEADERS=true -n ${MSA_PROJECT_NAMESPACE}
 
-oc set env dc/${APP} --overwrite POLICY_IP_RATE_LIMIT_MAX_HIT_COUNT=10 -n ${PROJECT_NAMESPACE}
-oc set env dc/${APP} --overwrite POLICY_IP_RATE_LIMIT_TIME_WINDOW=60000 -n ${PROJECT_NAMESPACE}
-oc set env dc/${APP} --overwrite POLICY_IP_RATE_LIMIT_X_FORWARDED_FOR="10.6.128.23,200.164.107.55" -n ${PROJECT_NAMESPACE}
-oc set env dc/${APP} --overwrite POLICY_IP_RATE_LIMIT_WHITE_LIST_IPS= -n ${PROJECT_NAMESPACE}
+oc set env dc/${APP} --overwrite POLICY_IP_RATE_LIMIT_MAX_HIT_COUNT=10 -n ${MSA_PROJECT_NAMESPACE}
+oc set env dc/${APP} --overwrite POLICY_IP_RATE_LIMIT_TIME_WINDOW=60000 -n ${MSA_PROJECT_NAMESPACE}
+oc set env dc/${APP} --overwrite POLICY_IP_RATE_LIMIT_X_FORWARDED_FOR="10.6.128.23,200.164.107.55" -n ${MSA_PROJECT_NAMESPACE}
+oc set env dc/${APP} --overwrite POLICY_IP_RATE_LIMIT_WHITE_LIST_IPS= -n ${MSA_PROJECT_NAMESPACE}
 
-oc rollout resume dc ${APP} -n ${PROJECT_NAMESPACE}
+oc rollout resume dc ${APP} -n ${MSA_PROJECT_NAMESPACE}
 
 curl -k -vvv "https://sample-production.apps.raphael.lab.upshift.rdu2.redhat.com/get" -H 'user_key: 38c6657cd5dee0a4a5c1dd5805dd482a'
 ```

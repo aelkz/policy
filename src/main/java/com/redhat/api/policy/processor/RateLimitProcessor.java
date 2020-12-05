@@ -25,24 +25,25 @@ public class RateLimitProcessor implements Processor {
         LOGGER.info(":: RateLimitProcessor.process(Exchange exchange) throws RateLimitException called");
         LOGGER.info("\t:: key.value = [" + exchange.getIn().getHeader(InfinispanConstants.KEY) + "," + exchange.getIn().getBody(String.class) + "]");
 
-        HitCountDTO hitCountDTO = new HitCountDTO()
-            .withTimeStamp(System.currentTimeMillis())
-            .withIp(exchange.getIn().getHeader(InfinispanConstants.KEY).toString())
-            .withHitCount(exchange.getIn().getBody(Integer.class));
+        HitCountDTO record = new HitCountDTO(); // must initialize it first
+
+        record.withTimeStamp(System.currentTimeMillis())
+        .withIp(exchange.getIn().getHeader(InfinispanConstants.KEY).toString())
+        .withHitCount(exchange.getIn().getBody(Integer.class));
 
         try {
-            if (hitCountDTO.isEmpty()) {
-                hitCountDTO.withHitCount(1);
-            } else if (hitCountDTO.getHitCount() >= policyConfig.getMaxHitCount()) {
-                throw new RateLimitException(hitCountDTO.getIp());
+            if (record.isEmpty()) {
+                record.withHitCount(1);
+            } else if (record.getHitCount() >= policyConfig.getMaxHitCount()) {
+                throw new RateLimitException(record.getIp());
             }
         } catch (Exception ex){
             LOGGER.severe(ApplicationEnum.GENERAL_PROXY_ERROR_MESSAGE.getValueWithMessage(ex.getMessage()));
         } finally {
-            hitCountDTO.increase();
+            record.increase();
             exchange.getIn().setBody("");
-            exchange.setProperty(ApplicationEnum.HIT_COUNT.getValue(), hitCountDTO);
-            LOGGER.info("\t:: ip [" + hitCountDTO.getIp() + "] hits [" + hitCountDTO.getHitCount() + "] at " + hitCountDTO.getTimeStamp());
+            exchange.setProperty(ApplicationEnum.HIT_COUNT.getValue(), record);
+            LOGGER.info("\t:: ip [" + record.getIp() + "] hits [" + record.getHitCount() + "] at " + record.getTimeStamp());
         }
 
     }
