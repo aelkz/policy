@@ -14,9 +14,6 @@ import org.springframework.stereotype.Component;
 public class InfinispanConfig {
     private static Logger LOGGER = LoggerFactory.getLogger(InfinispanConfig.class);
 
-    @Value("${infinispan.client.hotrod.server-list}")
-    private String serverList;
-
     @Value("${infinispan.client.hotrod.host}")
     private String host;
 
@@ -93,14 +90,6 @@ public class InfinispanConfig {
 
     public static void setLOGGER(Logger LOGGER) {
         InfinispanConfig.LOGGER = LOGGER;
-    }
-
-    public String getServerList() {
-        return serverList;
-    }
-
-    public void setServerList(String serverList) {
-        this.serverList = serverList;
     }
 
     public String getHost() {

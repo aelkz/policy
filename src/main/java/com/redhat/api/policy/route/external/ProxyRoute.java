@@ -36,12 +36,16 @@ public class ProxyRoute extends RouteBuilder {
 
         final RouteDefinition from;
 
-        if (proxyConfig.isSecured()) {
+        boolean secured =
+        (proxyConfig.getKeystoreDest() != null && proxyConfig.getKeystorePass() != null)
+                && (!"".equals(proxyConfig.getKeystoreDest()) && !"".equals(proxyConfig.getKeystorePass()));
+
+        if (secured) {
             configureHttp4();
 
             from = from(proxyConfig.getConsumer()
                 +":proxy://0.0.0.0:"
-                + proxyConfig.getPort()
+                + proxyConfig.getHttpsPort()
                 + "?ssl=true&keyStoreFile="
                 + proxyConfig.getKeystoreDest()
                 + "&passphrase="
@@ -53,7 +57,7 @@ public class ProxyRoute extends RouteBuilder {
         } else {
             from = from(proxyConfig.getConsumer()
                 +":proxy://0.0.0.0:"
-                + proxyConfig.getPort())
+                + proxyConfig.getHttpPort())
                 .id("from-"+ proxyConfig.getConsumer()+"-http")
                 .log(":: "+ proxyConfig.getConsumer() + " http headers:");
         }

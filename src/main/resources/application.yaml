@@ -16,7 +16,7 @@ api:
 logging:
   config: classpath:logback.xml
   level:
-    root: DEBUG
+    root: INFO
 
 camel:
   health:
@@ -68,24 +68,21 @@ management:
 opentracing:
   jaeger:
     enabled: true
-    service-name: ${OPENSHIFT_APP_NAME:3scale-proxy-policy}
-    enable-b3-propagation: true
+    service-name: 3scale-proxy-policy
+    enable-b3-propagation: false
     log-spans: true
     const-sampler:
       decision: true
     udp-sender:
-      host: ${OPENSHIFT_JAEGER_TRACE_HOST:localhost}
+      host: localhost
       port: 6831
     http-sender:
-      #url: http://jaeger-collector:14268/api/traces
-      #url: http://jaeger-collector.microservices.svc.cluster.local:14268/api/traces
-      url: http://${OPENSHIFT_JAEGER_TRACE_HOST:localhost}:${OPENSHIFT_JAEGER_TRACE_PORT:14268}/api/traces}
-      #password:
-      #username:
+      #url: http://${OPENSHIFT_JAEGER_TRACE_HOST:localhost}:${OPENSHIFT_JAEGER_TRACE_PORT:14268}/api/traces}
+      url: http://localhost:14268/api/traces
     expand-exception-logs: true
     remote-reporter:
-      max-queue-size: 10000
-      flush-interval: 1000
+      max-queue-size: 5
+      flush-interval: 5
     tags:
       - 3scale
       - proxy
@@ -105,9 +102,9 @@ infinispan:
       connection-timeout: ${INFINISPAN_HOTROD_CONNECTION_TIMEOUT:5000}
       socket-timeout: ${INFINISPAN_HOTROD_SOCKET_TIMEOUT:5000}
       max-retries: ${INFINISPAN_HOTROD_MAX_RETRIES:3}
-      server-list: ${INFINISPAN_APP_NAME:datagrid-fuse-policy}.${INFINISPAN_SERVICE_NAMESPACE:rh-datagrid-73}.svc:11222
       trust-store-path: ${SERVICE_CA_PATH:/var/run/secrets/kubernetes.io/serviceaccount/service-ca.crt}
-      host: ${INFINISPAN_APP_NAME:datagrid-fuse-policy}.${INFINISPAN_SERVICE_NAMESPACE:rh-datagrid-73}.svc
+      #host: ${INFINISPAN_APP_NAME:datagrid-fuse-policy}.${INFINISPAN_SERVICE_NAMESPACE:rh-datagrid-73}.svc
+      host: localhost
       port: ${INFINISPAN_HOTROD_PORT:11222}
       cache: ${INFINISPAN_CACHE:default}
 
@@ -118,13 +115,16 @@ custom:
   proxy:
     consumer: ${FUSE_PROXY_CONSUMER_COMPONENT:netty4-http}
     producer: ${FUSE_PROXY_PRODUCER_COMPONENT:http4}
-    port: ${FUSE_PROXY_PORT:8443}
+    https-port: ${FUSE_PROXY_HTTP_PORT:8443}
+    http-port: ${FUSE_PROXY_HTTPS_PORT:8080}
     producer-query: ${FUSE_PRODUCER_QUERY:?connectionClose=false&bridgeEndpoint=true&copyHeaders=true}
     keystore:
       #dest: ${FUSE_PROXY_KEYSTORE_DESTINATION:/deployments/data/keystore.jks}
       #pass: ${FUSE_PROXY_KEYSTORE_PASSWORD:changeme}
-      dest: ${FUSE_PROXY_KEYSTORE_DESTINATION:/deployments/data/keystore.jks}
-      pass: ${FUSE_PROXY_KEYSTORE_PASSWORD:49CNOIPBvFh6b9yKpzK9PKCr1}
+      #dest: ${FUSE_PROXY_KEYSTORE_DESTINATION:/deployments/data/keystore.jks}
+      #pass: ${FUSE_PROXY_KEYSTORE_PASSWORD:49CNOIPBvFh6b9yKpzK9PKCr1}
+      dest: ${FUSE_PROXY_KEYSTORE_DESTINATION:}
+      pass: ${FUSE_PROXY_KEYSTORE_PASSWORD:}
     debug-headers: ${FUSE_PROXY_DEBUG_HEADERS:true}
   policy:
     ip-rate-limit:

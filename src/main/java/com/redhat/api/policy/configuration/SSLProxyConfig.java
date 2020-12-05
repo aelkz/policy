@@ -16,14 +16,12 @@ public class SSLProxyConfig {
     private String producer;
     @Value("${custom.proxy.producer-query}")
     private String producerQuery;
-    @Value("${custom.proxy.port}")
-    private String port;
+    @Value("${custom.proxy.http-port}")
+    private String httpPort;
+    @Value("${custom.proxy.https-port}")
+    private String httpsPort;
     @Value("${custom.proxy.debug-headers}")
     private Boolean debugHeaders;
-
-    public Boolean isSecured() {
-        return (getKeystoreDest() != null && getKeystorePass() != null) && (!"".equals(getKeystoreDest()) && !"".equals(getKeystorePass()));
-    }
 
     public String getKeystoreDest() {
         return keystoreDest;
@@ -57,20 +55,30 @@ public class SSLProxyConfig {
         this.producer = producer;
     }
 
-    public String getPort() {
-        return port;
+    public String getHttpPort() {
+        return httpPort;
     }
 
-    public void setPort(String port) {
-        this.port = port;
+    public void setHttpPort(String httpPort) {
+        this.httpPort = httpPort;
+    }
+
+    public String getHttpsPort() {
+        return httpsPort;
+    }
+
+    public void setHttpsPort(String httpsPort) {
+        this.httpsPort = httpsPort;
     }
 
     public String getProducerQuery() {
         return producerQuery;
     }
+
     public Boolean getDebugHeaders() {
         return debugHeaders;
     }
+
     public void setDebugHeaders(Boolean debugHeaders) {
         this.debugHeaders = debugHeaders;
     }
