@@ -146,6 +146,7 @@ oc rollout resume dc ${APP} -n ${MSA_PROJECT_NAMESPACE}
 ```
 
 ## DEPLOYMENT CONFIG. VARIABLES SETUP
+```
 KEYSTORE_PASSWORD=$(openssl rand -base64 512 | tr -dc A-Z-a-z-0-9 | head -c 25)
 keytool -genkeypair -keyalg RSA -keysize 2048 -dname CN="*.$OCP_DOMAIN" -alias https-key -keystore keystore.jks -storepass ${KEYSTORE_PASSWORD}
 echo ${KEYSTORE_PASSWORD}

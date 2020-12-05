@@ -8,3 +8,4 @@
     https://developer.github.com/v3/#rate-limiting
 3. Ausência de ?bridgeEndpoint=true&throwExceptionOnFailure=false no https consumer
 4. JaegerTagProcesso sem anotacação @Component (avaliar necessidade)
+5. concat de ips do metodo ipfilter c.r.a.p.route.external.ProxyRoute - clientIp "10.6.128.23:200.164.107.55":

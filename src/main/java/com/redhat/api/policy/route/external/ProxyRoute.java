@@ -76,7 +76,7 @@ public class ProxyRoute extends RouteBuilder {
         }
 
         from("direct:internal-redirect")
-            .process(ProxyRoute::remoteAddressFilter).id("proxy-client-ip-discovery")
+            .process(ProxyRoute::remoteAddressFilter)
             .to("direct:policy")
             .wireTap("direct:increment-hit-count")
             .doTry()
@@ -133,10 +133,13 @@ public class ProxyRoute extends RouteBuilder {
             ips = ips.concat(ip).concat(":");
         }
 
-        if (ipList == null) {
+        if (ipList.isEmpty()) {
             ips = ApplicationEnum.EMPTY_X_FORWARDED_FOR.getValue();
+        } else {
+          ips = ips.substring(0, ips.length()-1);
         }
 
+        LOGGER.info("\t:: "+ApplicationEnum.CLIENT_IP.getValue() + " with value: " + ips);
         exchange.setProperty(ApplicationEnum.CLIENT_IP.getValue(), ips);
     }
 
