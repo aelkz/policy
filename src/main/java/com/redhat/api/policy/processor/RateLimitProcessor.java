@@ -40,9 +40,13 @@ public class RateLimitProcessor implements Processor {
         // catch (Excption e) {} -> block not allowed here!
         } finally {
             record.increase();
+            long boundary = record.getTimeStamp() - policyConfig.getTimeWindow();
 
             exchange.getIn().setBody("");
             exchange.setProperty(ApplicationEnum.HIT_COUNT.getValue(), record);
+            exchange.setProperty(ApplicationEnum.HIT_COUNT_TOTAL.getValue(), record.getHitCount());
+            exchange.getIn().setHeader(ApplicationEnum.HIT_BOUNDARY.getValue(), boundary);
+
             LOGGER.info("\t:: ip [" + record.getIp() + "] hits [" + record.getHitCount() + "] at " + record.getTimeStamp());
         }
 

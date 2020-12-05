@@ -12,6 +12,9 @@ public class HitCountDTO implements Serializable {
     public HitCountDTO() { }
 
     public Integer getHitCount() {
+        if (this.hitCount == null) {
+            this.hitCount = 0;
+        }
         return hitCount;
     }
 

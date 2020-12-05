@@ -31,6 +31,9 @@ public class CacheRoute extends RouteBuilder {
     private RateLimitStorageProcessor rateLimitStorageProcessor;
 
     @Autowired
+    private DebugRateLimitProcessor debugRateLimitProcessor;
+
+    @Autowired
     private SSLProxyConfig proxyConfig;
 
     @Autowired
@@ -45,22 +48,32 @@ public class CacheRoute extends RouteBuilder {
 
         from("direct:policy")
             .routeId("execute-route")
+
             .doTry()
                 .setHeader(InfinispanConstants.OPERATION, constant(InfinispanOperation.GET))
                 .setHeader(InfinispanConstants.KEY, simple("${exchangeProperty." + ApplicationEnum.CLIENT_IP.getValue() + "}"))
-                .log(":: JBoss Data Grid :: PUT#01 :: " + "${exchangeProperty." + ApplicationEnum.CLIENT_IP.getValue() + "}")
+                .log(":: infinispan :: GET#01 :: " + "${exchangeProperty." + ApplicationEnum.CLIENT_IP.getValue() + "}")
                 .to("infinispan://{{infinispan.client.hotrod.cache}}?cacheContainer=#cacheContainer")
             .endDoTry()
             .doCatch(Exception.class)
                 .log(":: Exception :: direct:policy :: infinispan service unavailable")
-                .process(CacheRoute::serviceUnavailable)
             .end()
 
             .doTry()
                 .process(rateLimitProcessor)
+                .choice()
+                    .when(constant(Boolean.TRUE).isEqualTo(Boolean.valueOf(proxyConfig.getDebugHeaders())))
+                    .process(debugRateLimitProcessor)
+                .endChoice()
+                .end()
             .endDoTry()
             .doCatch(RateLimitException.class)
                 .log(LoggingLevel.ERROR, LOGGER, ":: RateLimitException trowed")
+                .choice()
+                    .when(constant(Boolean.TRUE).isEqualTo(Boolean.valueOf(proxyConfig.getDebugHeaders())))
+                    .process(debugRateLimitProcessor)
+                .endChoice()
+                .end()
                 .process(CacheRoute::sendRateLimitError)
             .end()
             .to("direct:increment-hit-count");
@@ -70,35 +83,32 @@ public class CacheRoute extends RouteBuilder {
         // \--------------------------------------------------/
 
         from("direct:increment-hit-count")
-            .routeId("increment-hit-count-route")
-            .setHeader(InfinispanConstants.OPERATION, constant(InfinispanOperation.GET))
-            .setHeader(InfinispanConstants.KEY, simple("${exchangeProperty." + ApplicationEnum.CLIENT_IP.getValue() + "}-" + ApplicationEnum.HIT_TIMESTAMP.getValue()))
-            .log(":: infinispan :: GET :: " +  "${exchangeProperty." + ApplicationEnum.CLIENT_IP.getValue() + "}-" + ApplicationEnum.HIT_TIMESTAMP.getValue())
-                .to("infinispan:{{infinispan.client.hotrod.cache}}?cacheContainer=#cacheContainer")
-                .process(rateLimitStorageProcessor)
-            .multicast().parallelProcessing()
-                .pipeline()
-                    // TODO - implementar condicional para evitar atualização sem necessidade
-                    .setHeader(InfinispanConstants.OPERATION, constant(InfinispanOperation.PUT))
-                    .setHeader(InfinispanConstants.KEY, simple("${exchangeProperty." + ApplicationEnum.CLIENT_IP.getValue() + "}-" + ApplicationEnum.HIT_TIMESTAMP.getValue()))
-                    .setHeader(InfinispanConstants.VALUE, simple("${header." + ApplicationEnum.HIT_TIMESTAMP.getValue() + "}"))
-                        .log(":: infinispan :: PUT#02 :: " + "${exchangeProperty." + ApplicationEnum.CLIENT_IP.getValue() + "}-" + ApplicationEnum.HIT_TIMESTAMP.getValue())
-                        .to("infinispan:{{infinispan.client.hotrod.cache}}?cacheContainer=#cacheContainer")
-                .pipeline()
-                    .setHeader(InfinispanConstants.OPERATION, constant(InfinispanOperation.PUT))
-                    .setHeader(InfinispanConstants.KEY, simple("${exchangeProperty." + ApplicationEnum.CLIENT_IP.getValue() + "}"))
-                    .setHeader(InfinispanConstants.VALUE, simple("${exchangeProperty." + ApplicationEnum.HIT_COUNT_TOTAL.getValue() + "}"))
-                        .log(":: infinispan :: PUT#03 :: " + "${exchangeProperty." + ApplicationEnum.CLIENT_IP.getValue() + "}")
-                        .to("infinispan:{{infinispan.client.hotrod.cache}}?cacheContainer=#cacheContainer")
-
-            .setBody(constant(""))
-            .choice()
-                .when(constant(Boolean.TRUE).isEqualTo(proxyConfig.getDebugHeaders()))
-                    .process(new DebugHeaderProcessor("X-RateLimit-Limit", simple(""+policyConfig.getMaxHitCount())))
-                    .process(new DebugHeaderRemainingHitsProcessor("X-RateLimit-Remaining", policyConfig.getMaxHitCount(), simple("${exchangeProperty." + ApplicationEnum.HIT_COUNT_TOTAL.getValue() + "}")))
-                    .process(new DebugHeaderProcessor("X-RateLimit-Time", simple(""+System.currentTimeMillis())))
-                    .process(new DebugHeaderProcessor("X-RateLimit-Reset", simple("${header." + ApplicationEnum.HIT_BOUNDARY.getValue() + "}")))
-                .endChoice()
+            .doTry()
+                .setHeader(InfinispanConstants.OPERATION, constant(InfinispanOperation.GET))
+                .setHeader(InfinispanConstants.KEY, simple("${exchangeProperty." + ApplicationEnum.CLIENT_IP.getValue() + "}-" + ApplicationEnum.HIT_TIMESTAMP.getValue()))
+                .log(":: infinispan :: GET#02 :: " +  "${exchangeProperty." + ApplicationEnum.CLIENT_IP.getValue() + "}-" + ApplicationEnum.HIT_TIMESTAMP.getValue())
+                    .to("infinispan:{{infinispan.client.hotrod.cache}}?cacheContainer=#cacheContainer")
+                    .process(rateLimitStorageProcessor)
+                .multicast().parallelProcessing()
+                    .pipeline()
+                        // TODO - implementar condicional para evitar atualização sem necessidade
+                        .setHeader(InfinispanConstants.OPERATION, constant(InfinispanOperation.PUT))
+                        .setHeader(InfinispanConstants.KEY, simple("${exchangeProperty." + ApplicationEnum.CLIENT_IP.getValue() + "}-" + ApplicationEnum.HIT_TIMESTAMP.getValue()))
+                        .setHeader(InfinispanConstants.VALUE, simple("${header." + ApplicationEnum.HIT_TIMESTAMP.getValue() + "}"))
+                            .log(":: infinispan :: PUT#01 :: " + "${exchangeProperty." + ApplicationEnum.CLIENT_IP.getValue() + "}-" + ApplicationEnum.HIT_TIMESTAMP.getValue())
+                            .to("infinispan:{{infinispan.client.hotrod.cache}}?cacheContainer=#cacheContainer")
+                    .end()
+                    .pipeline()
+                        .setHeader(InfinispanConstants.OPERATION, constant(InfinispanOperation.PUT))
+                        .setHeader(InfinispanConstants.KEY, simple("${exchangeProperty." + ApplicationEnum.CLIENT_IP.getValue() + "}"))
+                        .setHeader(InfinispanConstants.VALUE, simple("${exchangeProperty." + ApplicationEnum.HIT_COUNT_TOTAL.getValue() + "}"))
+                            .log(":: infinispan :: PUT#02 :: " + "${exchangeProperty." + ApplicationEnum.CLIENT_IP.getValue() + "}")
+                            .to("infinispan:{{infinispan.client.hotrod.cache}}?cacheContainer=#cacheContainer")
+                    .end()
+                .setBody(constant(""))
+            .endDoTry()
+            .doCatch(Exception.class)
+                .log(":: Exception :: direct:increment-hit-count :: infinispan service unavailable")
             .end();
     }
 

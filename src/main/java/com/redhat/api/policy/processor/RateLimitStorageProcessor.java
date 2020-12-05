@@ -28,7 +28,7 @@ public class RateLimitStorageProcessor implements Processor {
 
         LinkedList<Long> response = (LinkedList<Long>) exchange.getIn().getBody();
 
-        HitCountDTO hitCountDTO = exchange.getProperty(ApplicationEnum.HIT_COUNT.getValue(), HitCountDTO.class);
+        HitCountDTO record = exchange.getProperty(ApplicationEnum.HIT_COUNT.getValue(), HitCountDTO.class);
         HitCountStorageDTO entry = new HitCountStorageDTO()
                 .withIp(exchange.getIn().getHeader(InfinispanConstants.KEY).toString());
 
@@ -38,21 +38,21 @@ public class RateLimitStorageProcessor implements Processor {
             entry.withTimestampRecords((LinkedList<Long>) response.clone());
         }
 
-        long boundary = hitCountDTO.getTimeStamp() - policyConfig.getTimeWindow();
+        long boundary = record.getTimeStamp() - policyConfig.getTimeWindow();
 
         synchronized (entry.getTimestampRecords()) {
-            if (hitCountDTO.getHitCount() >= policyConfig.getMaxHitCount()) {
+            if (record.getHitCount() >= policyConfig.getMaxHitCount()) {
                 while (!entry.getTimestampRecords().isEmpty() && entry.getTimestampRecords().element() <= boundary) {
                     entry.getTimestampRecords().poll();
                 }
             }
-            entry.getTimestampRecords().add(hitCountDTO.getTimeStamp());
+            entry.getTimestampRecords().add(record.getTimeStamp());
         }
 
         LOGGER.info("\t:: ip [" + entry.getIp() + "] with [" + entry.getTimestampRecords().size() + "] hits in current time-frame");
-        hitCountDTO.withHitCount(entry.getTimestampRecords().size());
+        record.withHitCount(entry.getTimestampRecords().size());
 
-        exchange.setProperty(ApplicationEnum.HIT_COUNT_TOTAL.getValue(), hitCountDTO.getHitCount());
+        exchange.setProperty(ApplicationEnum.HIT_COUNT_TOTAL.getValue(), record.getHitCount());
         exchange.getIn().setBody("");
         exchange.getIn().setHeader(ApplicationEnum.HIT_TIMESTAMP.getValue(), entry.getTimestampRecords());
         exchange.getIn().setHeader(ApplicationEnum.HIT_BOUNDARY.getValue(), boundary);

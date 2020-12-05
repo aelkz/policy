@@ -78,7 +78,7 @@ public class ProxyRoute extends RouteBuilder {
         from("direct:internal-redirect")
             .process(ProxyRoute::remoteAddressFilter)
             .to("direct:policy")
-            .to("direct:increment-hit-count")
+            .wireTap("direct:increment-hit-count")
             .doTry()
                 .toD(proxyConfig.getProducer()+":"
                     + ("http4".equals(proxyConfig.getProducer()) ? "//" : "${header." + Exchange.HTTP_SCHEME + "}://")
