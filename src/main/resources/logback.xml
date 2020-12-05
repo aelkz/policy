@@ -14,8 +14,8 @@
     </root>
 
     <!--
-    <logger name="br.gov.bnb.openbanking.admin" level="INFO"/>
-    <logger name="br.gov.bnb.openbanking.admin.configuration" level="INFO"/>
+    <logger name="com.redhat.api.policy" level="INFO"/>
+    <logger name="com.redhat.api.policy.configuration" level="INFO"/>
     -->
 
 </configuration>

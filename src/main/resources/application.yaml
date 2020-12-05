@@ -60,29 +60,30 @@ management:
 # =============================================
 # opentracing configurations
 # ---------------------------------------------
-# =============================================
-# opentracing configurations
-# see: https://github.com/opentracing-contrib/java-spring-jaeger/blob/master/README.md
+# see:
+# https://github.com/opentracing-contrib/java-spring-jaeger/blob/master/README.md
+# https://medium.com/jaegertracing/help-something-is-wrong-with-my-jaeger-installation-68874395a7a6
+# https://medium.com/@krushnatkhawale/opentracing-using-jaeger-with-spring-boot-web-application-ceaf8dd99fe9
+# https://camel.apache.org/components/latest/others/opentracing.html
+# https://github.com/jaegertracing/jaeger-client-java/issues/607
+# https://grafana.com/blog/2020/07/09/where-did-all-my-spans-go-a-guide-to-diagnosing-dropped-spans-in-jaeger-distributed-tracing/
+# https://opentracing.io/guides/java/
 # ---------------------------------------------
 
 opentracing:
   jaeger:
     enabled: true
-    service-name: 3scale-proxy-policy
-    enable-b3-propagation: false
+    service-name: ${OPENSHIFT_APP_NAME:3scale-proxy-policy}
+    enable-b3-propagation: true
     log-spans: true
     const-sampler:
       decision: true
-    udp-sender:
-      host: localhost
-      port: 6831
     http-sender:
-      #url: http://${OPENSHIFT_JAEGER_TRACE_HOST:localhost}:${OPENSHIFT_JAEGER_TRACE_PORT:14268}/api/traces}
-      url: http://localhost:14268/api/traces
+      url: ${OPENSHIFT_JAEGER_HTTP_SENDER_URI:http://localhost:14268/api/traces}
     expand-exception-logs: true
     remote-reporter:
-      max-queue-size: 5
-      flush-interval: 5
+      max-queue-size: ${OPENSHIFT_JAEGER_REPORTER_QUEUE_SIZE:5}
+      flush-interval: ${OPENSHIFT_JAEGER_REPORTER_FLUSH_INTERVAL:5}
     tags:
       - 3scale
       - proxy
@@ -120,8 +121,6 @@ custom:
     producer-query: ${FUSE_PRODUCER_QUERY:?connectionClose=false&bridgeEndpoint=true&copyHeaders=true}
     keystore:
       #dest: ${FUSE_PROXY_KEYSTORE_DESTINATION:/deployments/data/keystore.jks}
-      #pass: ${FUSE_PROXY_KEYSTORE_PASSWORD:changeme}
-      #dest: ${FUSE_PROXY_KEYSTORE_DESTINATION:/deployments/data/keystore.jks}
       #pass: ${FUSE_PROXY_KEYSTORE_PASSWORD:49CNOIPBvFh6b9yKpzK9PKCr1}
       dest: ${FUSE_PROXY_KEYSTORE_DESTINATION:}
       pass: ${FUSE_PROXY_KEYSTORE_PASSWORD:}
@@ -132,5 +131,5 @@ custom:
       # milliseconds time window for external requests
       # 60s = 60000ms
       time-window: ${POLICY_IP_RATE_LIMIT_TIME_WINDOW:60000}
-      x-forwarded-for: ${POLICY_IP_RATE_LIMIT_X_FORWARDED_FOR:10.6.128.23,200.164.107.55}
+      x-forwarded-for: ${POLICY_IP_RATE_LIMIT_X_FORWARDED_FOR:"10.6.128.23,200.164.107.55"}
       white-list-ips: ${POLICY_IP_RATE_LIMIT_WHITE_LIST_IPS:}

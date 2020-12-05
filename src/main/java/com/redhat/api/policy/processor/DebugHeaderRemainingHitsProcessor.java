@@ -32,7 +32,11 @@ public class DebugHeaderRemainingHitsProcessor implements Processor {
     @Override
     public void process(Exchange exchange) throws RateLimitException {
         Integer value = expression.evaluate(exchange, Integer.class); // will throw RuntimeException if not Integer.class
-        value = maxPolicyHits - value;
+        if (value != null && value > 0) {
+            value = maxPolicyHits - value;
+        } else {
+            value = maxPolicyHits;
+        }
         exchange.getOut().setHeader(getHeader(), value);
     }
 

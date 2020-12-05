@@ -42,9 +42,8 @@ public class CacheRoute extends RouteBuilder {
         // | acquire remote address hits                      |
         // \--------------------------------------------------/
 
-        from("direct:getHitCount")
-            .routeId("get-hit-count-route")
-
+        from("direct:policy")
+            .routeId("execute-route")
             .doTry()
                 .setHeader(InfinispanConstants.OPERATION, constant(InfinispanOperation.GET))
                 .setHeader(InfinispanConstants.KEY, simple("${exchangeProperty." + ApplicationEnum.CLIENT_IP + "}"))
@@ -52,7 +51,7 @@ public class CacheRoute extends RouteBuilder {
                 .to("infinispan://{{infinispan.client.hotrod.cache}}?cacheContainer=#cacheContainer")
             .endDoTry()
             .doCatch(Exception.class)
-                .log(":: Exception :: direct:getHitCount :: datagrid service unavailable")
+                .log(":: Exception :: direct:policy :: datagrid service unavailable")
                 .process(CacheRoute::serviceUnavailable)
             .end()
 
@@ -60,7 +59,7 @@ public class CacheRoute extends RouteBuilder {
                 .process(rateLimitProcessor)
             .endDoTry()
             .doCatch(RateLimitException.class)
-                .wireTap("direct:incrementHitCount")
+                .wireTap("direct:increment-hit-count")
                 .process(CacheRoute::sendRateLimitError)
             .end();
 
@@ -68,7 +67,7 @@ public class CacheRoute extends RouteBuilder {
         // | evaluate and compute remote address hits         |
         // \--------------------------------------------------/
 
-        from("direct:incrementHitCount")
+        from("direct:increment-hit-count")
             .routeId("increment-hit-count-route")
             .setHeader(InfinispanConstants.OPERATION, constant(InfinispanOperation.GET))
             .setHeader(InfinispanConstants.KEY, simple("${exchangeProperty." + ApplicationEnum.CLIENT_IP + "}-" + ApplicationEnum.HIT_TIMESTAMP))

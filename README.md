@@ -18,7 +18,6 @@ curl -k -vvv "https://openbanking-production.apps.raphael.lab.upshift.rdu2.redha
 curl -k -vvv "https://sample-production.apps.raphael.lab.upshift.rdu2.redhat.com/get" -H 'user_key: 2695b1d2bae74f8006a6d91c2fc4d407' # if using key as http header
 ```
 
-
 ## TESTING LOCALLY (WITHOUT 3SCALE)
 ```
 docker run -d --name jaeger \
@@ -36,6 +35,16 @@ docker run -d --name jaeger \
 
 Then, you can then navigate to `http://localhost:16686` to access the Jaeger UI.
 Then, you can start the container instance: `docker start <CONTAINER-ID>`
+
+```
+curl -vvv "http://www.postman-echo.com/get" -H 'Accept: application/json'
+
+curl -k -vvv https://www.postman-echo.com/get -H 'Accept: application/json' -x "https://0.0.0.0:8443" --proxy-insecure
+curl -vvv "http://www.postman-echo.com/get" -H 'Accept: application/json' -x "http://0.0.0.0:8080"
+
+print "GET https://<backend url>. HTTP/1.1\nHost: <backend>\nAccept: */*\n\n" | ncat --no-shutdown --ssl <camel proxy app> <camel proxy port>
+print "GET http://www.postman-echo.com/get HTTP/1.1\nHost: http://www.postman-echo.com/get\nAccept: */*\n\n" | ncat --no-shutdown 0.0.0.0 8080
+```
 
 ## DATAGRID DEPLOYMENT
 ```

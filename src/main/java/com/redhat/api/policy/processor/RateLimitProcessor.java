@@ -28,7 +28,7 @@ public class RateLimitProcessor implements Processor {
         HitCountDTO record = new HitCountDTO(); // must initialize it first
 
         record.withTimeStamp(System.currentTimeMillis())
-        .withIp(exchange.getIn().getHeader(InfinispanConstants.KEY).toString())
+        .withIp(exchange.getIn().getHeader(InfinispanConstants.KEY) != null ? exchange.getIn().getHeader(InfinispanConstants.KEY).toString() : "")
         .withHitCount(exchange.getIn().getBody(Integer.class));
 
         try {

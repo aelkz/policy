@@ -2,12 +2,12 @@ package com.redhat.api.policy.route.external;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.logging.Logger;
 
 import com.redhat.api.policy.configuration.PolicyConfig;
 import com.redhat.api.policy.configuration.SSLProxyConfig;
 import com.redhat.api.policy.enumerator.ApplicationEnum;
 import org.apache.camel.Exchange;
+import org.apache.camel.LoggingLevel;
 import org.apache.camel.Message;
 import org.apache.camel.builder.RouteBuilder;
 import org.apache.camel.component.http4.HttpComponent;
@@ -19,11 +19,13 @@ import org.apache.camel.util.jsse.TrustManagersParameters;
 import org.apache.http.conn.ssl.NoopHostnameVerifier;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 @Component("proxy")
 public class ProxyRoute extends RouteBuilder {
 
-    private static final Logger LOGGER = Logger.getLogger(ProxyRoute.class.getName());
+    private static final Logger LOGGER = LoggerFactory.getLogger(ProxyRoute.class);
 
     @Autowired
     private PolicyConfig policyConfig;
@@ -62,18 +64,21 @@ public class ProxyRoute extends RouteBuilder {
                 .log(":: "+ proxyConfig.getConsumer() + " http headers:");
         }
 
-        if (policyConfig.getxForwardedFor() != null && !"".equals(policyConfig.getxForwardedFor())) {
+        if (policyConfig.getxForwardedFor() != null && !"".equals(policyConfig.getxForwardedFor().trim())) {
             ArrayList<String> ipList = new ArrayList<String>();
             ipList = new ArrayList<String>(Arrays.asList(policyConfig.getxForwardedFor().split(",")));
+            from.log(LoggingLevel.WARN, LOGGER, "x-forwarded-for env set");
+            from.log(LoggingLevel.WARN, LOGGER, "\t:: remote addresses: " + ipList);
             from.setHeader("X-Forwarded-For", constant(ipList)).to("direct:internal-redirect");
         }else {
+            from.log(LoggingLevel.INFO, LOGGER, "x-forwarded-for env unset");
             from.to("direct:internal-redirect");
         }
 
-        from("direct:internal-redirect").id("proxy-internal-redirect")
+        from("direct:internal-redirect")
             .process(ProxyRoute::remoteAddressFilter).id("proxy-client-ip-discovery")
-            .to("direct:getHitCount").id("datagrid-get-hit-count")
-            .wireTap("direct:incrementHitCount").id("datagrid-evaluate-hit-count")
+            .to("direct:policy")
+            .wireTap("direct:increment-hit-count")
             .doTry()
                 .toD(proxyConfig.getProducer()+":"
                     + ("http4".equals(proxyConfig.getProducer()) ? "//" : "${header." + Exchange.HTTP_SCHEME + "}://")
@@ -81,7 +86,6 @@ public class ProxyRoute extends RouteBuilder {
                     + "${headers." + Exchange.HTTP_PORT + "}"
                     + "${header." + Exchange.HTTP_PATH + "}"
                     + proxyConfig.getProducerQuery())
-                    .id("proxy-endpoint-request")
                 .log(":: request forwarded to backend")
             .endDoTry()
             .doCatch(Exception.class)

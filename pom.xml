@@ -140,53 +140,6 @@
             <groupId>org.apache.camel</groupId>
             <artifactId>camel-opentracing-starter</artifactId>
         </dependency>
-        <!-- TEST 01 -->
-        <!--
-        <dependency>
-            <groupId>io.opentracing.contrib</groupId>
-            <artifactId>opentracing-spring-jaeger-starter</artifactId>
-            <version>${version.io.opentracing.contrib}</version>
-        </dependency>
-        <dependency>
-            <groupId>io.opentracing</groupId>
-            <artifactId>opentracing-api</artifactId>
-            <version>0.33.0.redhat-00001</version>
-        </dependency>
-        <dependency>
-            <groupId>io.opentracing</groupId>
-            <artifactId>opentracing-util</artifactId>
-            <version>0.33.0.redhat-00001</version>
-        </dependency>
-        -->
-        <!-- TEST 02 -->
-        <!--
-        <dependency>
-            <groupId>io.opentracing.contrib</groupId>
-            <artifactId>opentracing-spring-jaeger-starter</artifactId>
-            <version>${version.io.opentracing.contrib}</version>
-        </dependency>
-        <dependency>
-            <groupId>io.jaegertracing</groupId>
-            <artifactId>jaeger-client</artifactId>
-            <version>0.35.5</version>
-        </dependency>
-        <dependency>
-            <groupId>io.jaegertracing</groupId>
-            <artifactId>jaeger-tracerresolver</artifactId>
-            <version>0.35.5</version>
-        </dependency>
-        <dependency>
-            <groupId>io.opentracing</groupId>
-            <artifactId>opentracing-util</artifactId>
-            <version>0.33.0</version>
-        </dependency>
-        <dependency>
-            <groupId>io.opentracing</groupId>
-            <artifactId>opentracing-api</artifactId>
-            <version>0.33.0</version>
-        </dependency>
-        -->
-        <!-- TEST 03 -->
         <dependency>
             <groupId>io.opentracing.contrib</groupId>
             <artifactId>opentracing-spring-jaeger-starter</artifactId>
@@ -194,18 +147,8 @@
         </dependency>
         <dependency>
             <groupId>io.jaegertracing</groupId>
-            <artifactId>jaeger-core</artifactId>
-            <version>1.1.0.redhat-00002</version>
-        </dependency>
-        <dependency>
-            <groupId>io.jaegertracing</groupId>
             <artifactId>jaeger-client</artifactId>
             <version>1.1.0.redhat-00002</version>
-        </dependency>
-        <dependency>
-            <groupId>io.opentracing</groupId>
-            <artifactId>opentracing-noop</artifactId>
-            <version>0.33.0.redhat-00001</version>
         </dependency>
         <dependency>
             <groupId>io.opentracing</groupId>
@@ -220,22 +163,8 @@
         <dependency>
             <groupId>io.jaegertracing</groupId>
             <artifactId>jaeger-tracerresolver</artifactId>
-            <version>1.5.0</version>
+            <version>1.1.0.redhat-00002</version>
         </dependency>
-
-        <!-- HISTORY -->
-        <!--
-        <dependency>
-            <groupId>io.opentracing</groupId>
-            <artifactId>opentracing-api</artifactId>
-            <version>${version.io.opentracing}</version>
-        </dependency>
-        <dependency>
-            <groupId>io.opentracing</groupId>
-            <artifactId>opentracing-util</artifactId>
-            <version>${version.io.opentracing}</version>
-        </dependency>
-        -->
 
         <!-- prometheus -->
         <dependency>
