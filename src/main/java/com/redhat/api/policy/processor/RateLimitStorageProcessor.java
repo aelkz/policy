@@ -1,6 +1,9 @@
 package com.redhat.api.policy.processor;
 
+import java.time.Instant;
+import java.time.LocalDateTime;
 import java.util.LinkedList;
+import java.util.TimeZone;
 import java.util.logging.Logger;
 
 import com.redhat.api.policy.configuration.PolicyConfig;
@@ -39,6 +42,24 @@ public class RateLimitStorageProcessor implements Processor {
         }
 
         long boundary = record.getTimeStamp() - policyConfig.getTimeWindow();
+
+        long millis = boundary;
+        LocalDateTime triggerTime = null;
+        triggerTime =
+                LocalDateTime.ofInstant(Instant.ofEpochMilli(millis),
+                        TimeZone.getDefault().toZoneId());
+        System.out.println();
+        System.out.println("boundary");
+        System.out.println("\t"+millis);
+        System.out.println("\t"+triggerTime);
+        millis = record.getTimeStamp();
+        triggerTime =
+                LocalDateTime.ofInstant(Instant.ofEpochMilli(millis),
+                        TimeZone.getDefault().toZoneId());
+        System.out.println("record.getTimeStamp()");
+        System.out.println("\t"+millis);
+        System.out.println("\t"+triggerTime);
+        System.out.println();
 
         synchronized (entry.getTimestampRecords()) {
             if (record.getHitCount() >= policyConfig.getMaxHitCount()) {

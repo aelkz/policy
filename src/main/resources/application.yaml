@@ -129,7 +129,7 @@ custom:
     ip-rate-limit:
       max-hit-count: ${POLICY_IP_RATE_LIMIT_MAX_HIT_COUNT:10}
       # milliseconds time window for external requests
-      # 60s = 60000ms
+      # 1 minute = 60s = 60000ms
       time-window: ${POLICY_IP_RATE_LIMIT_TIME_WINDOW:60000}
       x-forwarded-for: ${POLICY_IP_RATE_LIMIT_X_FORWARDED_FOR:10.6.128.23,200.164.107.55}
       white-list-ips: ${POLICY_IP_RATE_LIMIT_WHITE_LIST_IPS:}

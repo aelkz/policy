@@ -1,5 +1,6 @@
 package com.redhat.api.policy.processor;
 
+import java.time.Instant;
 import java.util.logging.Logger;
 
 import com.redhat.api.policy.configuration.PolicyConfig;

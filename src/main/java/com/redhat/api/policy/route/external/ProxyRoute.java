@@ -6,6 +6,7 @@ import java.util.Arrays;
 import com.redhat.api.policy.configuration.PolicyConfig;
 import com.redhat.api.policy.configuration.SSLProxyConfig;
 import com.redhat.api.policy.enumerator.ApplicationEnum;
+import com.redhat.api.policy.exception.RateLimitException;
 import org.apache.camel.Exchange;
 import org.apache.camel.LoggingLevel;
 import org.apache.camel.Message;
@@ -75,6 +76,12 @@ public class ProxyRoute extends RouteBuilder {
             from.to("direct:internal-redirect");
         }
 
+        /**
+         * Known exceptions:
+         * 1- RateLimitException
+         * 2- Exception (infinispan unavailable)
+         * 3- Exception (upstream unavailable)
+         */
         from("direct:internal-redirect")
             .process(ProxyRoute::remoteAddressFilter)
             .to("direct:policy")

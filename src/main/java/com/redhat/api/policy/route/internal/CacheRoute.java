@@ -69,14 +69,14 @@ public class CacheRoute extends RouteBuilder {
             .endDoTry()
             .doCatch(RateLimitException.class)
                 .log(LoggingLevel.ERROR, LOGGER, ":: RateLimitException trowed")
+                .wireTap("direct:increment-hit-count")
                 .choice()
                     .when(constant(Boolean.TRUE).isEqualTo(Boolean.valueOf(proxyConfig.getDebugHeaders())))
                     .process(debugRateLimitProcessor)
                 .endChoice()
                 .end()
                 .process(CacheRoute::sendRateLimitError)
-            .end()
-            .to("direct:increment-hit-count");
+            .end();
 
         // /--------------------------------------------------\
         // | evaluate and compute remote address hits         |
@@ -119,16 +119,6 @@ public class CacheRoute extends RouteBuilder {
         final Message message = exchange.getIn();
         message.setFault(true);
         message.setHeader(Exchange.HTTP_RESPONSE_CODE, 429);
-        message.setBody("");
-    }
-
-    private static void serviceUnavailable(final Exchange exchange) {
-        LOGGER.info(":: method: serviceUnavailable(final Exchange exchange) called");
-        LOGGER.info("\t:: http.status.code=503");
-
-        final Message message = exchange.getIn();
-        message.setFault(true);
-        message.setHeader(Exchange.HTTP_RESPONSE_CODE, 503);
         message.setBody("");
     }
 
