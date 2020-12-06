@@ -42,7 +42,14 @@ public class DebugRateLimitProcessor implements Processor {
         message.setHeader("X-RateLimit-Remaining", hits);
 
         message.setHeader("X-RateLimit-Time", System.currentTimeMillis());
-        message.setHeader("X-RateLimit-Reset", exchange.getIn().getHeader(ApplicationEnum.HIT_BOUNDARY.getValue()));
+
+        // last 429 timestamp hit + refresh time window
+        if (exchange.getProperty(ApplicationEnum.HIT_LAST_429_MILLIS.getValue()) != null) {
+            long last429hitMillis = (Long) exchange.getProperty(ApplicationEnum.HIT_LAST_429_MILLIS.getValue());
+            long refreshMillis = last429hitMillis + policyConfig.getTimeWindow().longValue();
+
+            message.setHeader("X-RateLimit-Reset", refreshMillis);
+        }
     }
 
 }

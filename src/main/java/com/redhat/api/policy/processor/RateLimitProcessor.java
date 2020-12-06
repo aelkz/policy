@@ -1,6 +1,5 @@
 package com.redhat.api.policy.processor;
 
-import java.time.Instant;
 import java.util.logging.Logger;
 
 import com.redhat.api.policy.configuration.PolicyConfig;
@@ -36,6 +35,8 @@ public class RateLimitProcessor implements Processor {
             if (record.isEmpty()) {
                 record.withHitCount(1);
             } else if (record.getHitCount() >= policyConfig.getMaxHitCount()) {
+                exchange.setProperty(ApplicationEnum.HIT_LAST_429_MILLIS.getValue(), record.getTimeStamp());
+
                 throw new RateLimitException(record.getIp());
             }
         // catch (Excption e) {} -> block not allowed here!

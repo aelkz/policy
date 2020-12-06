@@ -19,7 +19,7 @@ public class TimeMillisUtil {
 
         System.out.println();
 
-        system_date_millis = 1607201788021L;
+        system_date_millis = 1607209565162L;
         triggerTime =
             LocalDateTime.ofInstant(Instant.ofEpochMilli(system_date_millis),
                     TimeZone.getDefault().toZoneId());
@@ -29,7 +29,7 @@ public class TimeMillisUtil {
 
         System.out.println();
 
-        system_date_millis = 1607201728021L;
+        system_date_millis = 1607209625162L;
         triggerTime =
             LocalDateTime.ofInstant(Instant.ofEpochMilli(system_date_millis),
                     TimeZone.getDefault().toZoneId());

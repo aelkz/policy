@@ -6,6 +6,7 @@ public enum ApplicationEnum {
     HIT_TIMESTAMP("hitTimeStamp"),
     HIT_COUNT_TOTAL("hitCountTotal"),
     HIT_BOUNDARY("hitBoundary"),
+    HIT_LAST_429_MILLIS("hitLast429"),
     EMPTY_X_FORWARDED_FOR( "NO_IP"),
     CLIENT_IP("clientIp"),
     GENERAL_PROXY_ERROR_MESSAGE("Proxy processing failed. Message: ");

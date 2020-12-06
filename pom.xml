@@ -3,11 +3,11 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
 
     <modelVersion>4.0.0</modelVersion>
-    <groupId>br.gov.bnb.openbanking.policy</groupId>
-    <artifactId>ip-rate-limits-gateway</artifactId>
+    <groupId>com.redhat.api</groupId>
+    <artifactId>api-proxy-policy</artifactId>
     <version>1.0.0</version>
 
-    <name>OpenBanking :: 3scale custom policy :: Proxy :: Ip Rate-Limit</name>
+    <name>3scale custom policy</name>
     <description>A custom policy to be used in 3scale AMP</description>
 
     <properties>
@@ -24,12 +24,6 @@
             http://localhost:8090/camel/health/check
         -->
         <fuse.bom.version>7.7.0.fuse-770012-redhat-00003</fuse.bom.version>
-        <!-- ###################################################################### -->
-        <!-- FROM OFFICIAL REDHAT FUSE DOCS=7.7.0.fuse-sb2-770010-redhat-00001      -->
-        <!-- ###################################################################### -->
-        <!--
-        <fuse.bom.version>7.7.0.fuse-sb2-770010-redhat-00001</fuse.bom.version>
-        -->
         <version.springboot>2.1.6.RELEASE</version.springboot>
         <!-- prometheus -->
         <version.micrometer>1.5.6</version.micrometer>
@@ -94,13 +88,6 @@
             <groupId>org.apache.camel</groupId>
             <artifactId>camel-infinispan-starter</artifactId>
         </dependency>
-        <!-- camel-servlet-starter = for use only with: 7.7.0.fuse-sb2-770010-redhat-00001 -->
-        <!--
-        <dependency>
-            <groupId>org.apache.camel</groupId>
-            <artifactId>camel-servlet-starter</artifactId>
-        </dependency>
-        -->
         <dependency>
             <groupId>org.apache.camel</groupId>
             <artifactId>camel-jackson-starter</artifactId>
