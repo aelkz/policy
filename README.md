@@ -132,7 +132,14 @@ echo "
 # there's no need to expose the policy service (it will be used as internal cluster communication)
 ```
 
-## DEPLOYMENT CONFIG. PROBES (FIX)
+## DEFAULT METRIC ENDPOINTS
+```
+http://localhost:8081/actuator/metrics
+http://localhost:8081/actuator/metrics/process.uptime
+http://localhost:8081/actuator/prometheus
+```
+
+## DEPLOYMENT CONFIG. PROBES (FIX FOR SPRINGBOOT1)
 If using the newest version (7.7.0.fuse-770012-redhat-00003) of fuse, actuator 8081 port is not exposed as it will be expected by default fuse 7.7 template,<br>
 so all probes from template needs to be updated to reflect new actuator endpoints.
 
@@ -143,6 +150,14 @@ oc set probe dc ${APP} --remove --liveness --readiness -n $MSA_PROJECT_NAMESPACE
 oc set probe dc ${APP} --readiness --failure-threshold 3 --initial-delay-seconds 10 --get-url=http://:8090/camel/health/check -n ${MSA_PROJECT_NAMESPACE}
 oc set probe dc ${APP} --liveness --failure-threshold 3 --initial-delay-seconds 180 --get-url=http://:8090/camel/health/check -n ${MSA_PROJECT_NAMESPACE}
 oc rollout resume dc ${APP} -n ${MSA_PROJECT_NAMESPACE}
+```
+
+Test it using the following:
+```
+http://localhost:8090/metrics/
+http://localhost:8090/trace
+http://localhost:8090/beans
+http://localhost:8090/camel/health/check
 ```
 
 ## DEPLOYMENT CONFIG. VARIABLES SETUP
