@@ -6,6 +6,7 @@ import java.util.Arrays;
 import com.redhat.api.policy.configuration.PolicyConfig;
 import com.redhat.api.policy.configuration.SSLProxyConfig;
 import com.redhat.api.policy.enumerator.ApplicationEnum;
+import com.redhat.api.policy.processor.HeadersDebugProcessor;
 import com.redhat.api.policy.processor.TracingDebugProcessor;
 import org.apache.camel.Exchange;
 import org.apache.camel.LoggingLevel;
@@ -36,6 +37,9 @@ public class ProxyRoute extends RouteBuilder {
 
     @Autowired
     private TracingDebugProcessor tracingDebug;
+
+    @Autowired
+    private HeadersDebugProcessor headersDebug;
 
     @Override
     public void configure() throws Exception {
@@ -68,7 +72,7 @@ public class ProxyRoute extends RouteBuilder {
                 .log(":: "+ proxyConfig.getConsumer() + " http headers:");
         }
 
-        from.process(tracingDebug);
+        from.process(headersDebug);
 
         if (policyConfig.getxForwardedFor() != null && !"".equals(policyConfig.getxForwardedFor().trim())) {
             ArrayList<String> ipList = new ArrayList<String>();
@@ -88,6 +92,8 @@ public class ProxyRoute extends RouteBuilder {
          * 3- Exception (upstream unavailable)
          */
         from("direct:internal-redirect")
+            .process(headersDebug)
+            .process(tracingDebug)
             .process(ProxyRoute::remoteAddressFilter)
             .to("direct:policy")
             .wireTap("direct:increment-hit-count")

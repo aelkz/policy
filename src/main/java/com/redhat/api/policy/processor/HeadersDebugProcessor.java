@@ -1,39 +1,30 @@
 package com.redhat.api.policy.processor;
 
 import com.redhat.api.policy.configuration.SSLProxyConfig;
-import io.opentracing.SpanContext;
-import io.opentracing.propagation.Format;
-import io.opentracing.propagation.TextMapAdapter;
 import org.apache.camel.Exchange;
 import org.apache.camel.Processor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
-
 import java.util.Map;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
 @Component
-public class TracingDebugProcessor implements Processor {
+public class HeadersDebugProcessor implements Processor {
 
-    private static final Logger LOGGER = Logger.getLogger(TracingDebugProcessor.class.getName());
+    private static final Logger LOGGER = Logger.getLogger(HeadersDebugProcessor.class.getName());
 
     @Autowired
     private SSLProxyConfig proxyConfig;
 
-    @Autowired
-    private io.opentracing.Tracer tracer;
-
-    public TracingDebugProcessor() { }
+    public HeadersDebugProcessor() { }
 
     @Override
     public void process(Exchange exchange) {
         if (proxyConfig.debug()) {
             System.out.println("\n");
             exchange.getIn().getHeaders().forEach((k, v) -> {
-                if (k.startsWith("X-")) {
-                    System.out.println(k + " : " + v);
-                }
+                System.out.println(k + " : " + v);
             });
             System.out.println("\n");
         }
@@ -41,8 +32,6 @@ public class TracingDebugProcessor implements Processor {
         Map<String,String> strMap = exchange.getIn().getHeaders().entrySet().stream()
             .filter(m -> m.getKey() != null && m.getValue() !=null)
             .collect(Collectors.toMap(Map.Entry::getKey, e -> e.getValue()+"")); // always add as String.class
-
-        tracer.inject(tracer.activeSpan().context(), Format.Builtin.HTTP_HEADERS, new TextMapAdapter(strMap));
 
         exchange.getOut().setHeaders(exchange.getIn().getHeaders());
         exchange.getOut().setBody(exchange.getIn().getBody());
