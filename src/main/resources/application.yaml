@@ -102,12 +102,12 @@ infinispan:
       username: ${INFINISPAN_HOTROD_USERNAME:}
       password: ${INFINISPAN_HOTROD_PASSWORD:}
       use-authn: ${INFINISPAN_HOTROD_AUTHN_ENABLED:false}
-      connection-timeout: ${INFINISPAN_HOTROD_CONNECTION_TIMEOUT:5000}
-      socket-timeout: ${INFINISPAN_HOTROD_SOCKET_TIMEOUT:5000}
-      max-retries: ${INFINISPAN_HOTROD_MAX_RETRIES:3}
+      connection-timeout: ${INFINISPAN_HOTROD_CONNECTION_TIMEOUT:3000}
+      socket-timeout: ${INFINISPAN_HOTROD_SOCKET_TIMEOUT:3000}
+      max-retries: ${INFINISPAN_HOTROD_MAX_RETRIES:2}
       trust-store-path: ${SERVICE_CA_PATH:/var/run/secrets/kubernetes.io/serviceaccount/service-ca.crt}
       #host: ${INFINISPAN_APP_NAME:datagrid-fuse-policy}.${INFINISPAN_SERVICE_NAMESPACE:rh-datagrid-73}.svc
-      host: localhost
+      host: ${INFINISPAN_HOTROD_HOST:localhost}
       port: ${INFINISPAN_HOTROD_PORT:11222}
       cache: ${INFINISPAN_CACHE:default}
 

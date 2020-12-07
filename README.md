@@ -139,7 +139,7 @@ http://localhost:8081/actuator/metrics/process.uptime
 http://localhost:8081/actuator/prometheus
 ```
 
-## DEPLOYMENT CONFIG. PROBES (FIX FOR SPRINGBOOT1)
+## DEPLOYMENT CONFIG. PROBES (FIX FOR SPRINGBOOT 1)
 If using the newest version (7.7.0.fuse-770012-redhat-00003) of fuse, actuator 8081 port is not exposed as it will be expected by default fuse 7.7 template,<br>
 so all probes from template needs to be updated to reflect new actuator endpoints.
 
@@ -171,19 +171,22 @@ sudo chown -R raphael: /deployments/
 sudo cp keystore.jks /deployments/data/keystore.jks
 
 oc rollout pause dc ${APP} -n ${MSA_PROJECT_NAMESPACE}
+
+# if using ssl
 oc create configmap policy-api-keystore-config --from-file=./keystore.jks -n ${MSA_PROJECT_NAMESPACE}
 oc set volume dc/${APP} --add --overwrite --name=policy-api-config-volume -m /deployments/data -t configmap --configmap-name=policy-api-keystore-config -n ${MSA_PROJECT_NAMESPACE}
 oc set env dc/${APP} --overwrite FUSE_PROXY_KEYSTORE_PASSWORD=${KEYSTORE_PASSWORD} -n ${MSA_PROJECT_NAMESPACE}
+oc set env dc/${APP} --overwrite FUSE_PROXY_KEYSTORE_DESTINATION=/deployments/data/keystore.jks  -n ${MSA_PROJECT_NAMESPACE}
 
 oc set env dc/${APP} --overwrite OPENSHIFT_APP_NAME=${APP} -n ${MSA_PROJECT_NAMESPACE}
 oc set env dc/${APP} --overwrite OPENSHIFT_HOST_NAME=${OCP_DOMAIN} -n ${MSA_PROJECT_NAMESPACE}
-oc set env dc/${APP} --overwrite OPENSHIFT_JAEGER_TRACE_HOST=jaeger-collector.microservices.svc.cluster.local -n ${MSA_PROJECT_NAMESPACE}
-oc set env dc/${APP} --overwrite OPENSHIFT_JAEGER_TRACE_PORT=14268 -n ${MSA_PROJECT_NAMESPACE}
 
-oc set env dc/${APP} --overwrite INFINISPAN_SERVICE_NAMESPACE=microservices -n ${MSA_PROJECT_NAMESPACE}
-oc set env dc/${APP} --overwrite INFINISPAN_APP_NAME=datagrid-fuse-policy -n ${MSA_PROJECT_NAMESPACE}
+oc set env dc/${APP} --overwrite INFINISPAN_HOTROD_HOST=datagrid-fuse-policy.microservices.svc.cluster.local -n ${MSA_PROJECT_NAMESPACE}
 
-oc set env dc/${APP} --overwrite FUSE_PROXY_DEBUG_HEADERS=true -n ${MSA_PROJECT_NAMESPACE}
+oc set env dc/${APP} --overwrite OPENSHIFT_JAEGER_HTTP_SENDER_URI=http://jaeger-collector.microservices.svc.cluster.local:14268/api/traces -n ${MSA_PROJECT_NAMESPACE}
+
+oc set env dc/${APP} --overwrite FUSE_PROXY_DEBUG=true -n ${MSA_PROJECT_NAMESPACE}
+oc set env dc/${APP} --overwrite FUSE_POLICY_DEBUG=true -n ${MSA_PROJECT_NAMESPACE}
 
 oc set env dc/${APP} --overwrite POLICY_IP_RATE_LIMIT_MAX_HIT_COUNT=10 -n ${MSA_PROJECT_NAMESPACE}
 oc set env dc/${APP} --overwrite POLICY_IP_RATE_LIMIT_TIME_WINDOW=60000 -n ${MSA_PROJECT_NAMESPACE}
