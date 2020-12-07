@@ -70,6 +70,8 @@ public class ProxyRoute extends RouteBuilder {
                 .log(":: "+ proxyConfig.getConsumer() + " http headers:");
         }
 
+        from.process(tracingDebug);
+
         if (policyConfig.getxForwardedFor() != null && !"".equals(policyConfig.getxForwardedFor().trim())) {
             ArrayList<String> ipList = new ArrayList<String>();
             ipList = new ArrayList<String>(Arrays.asList(policyConfig.getxForwardedFor().split(",")));
@@ -88,7 +90,6 @@ public class ProxyRoute extends RouteBuilder {
          * 3- Exception (upstream unavailable)
          */
         from("direct:internal-redirect")
-            .process(tracingDebug)
             .process(ProxyRoute::remoteAddressFilter)
             .to("direct:policy")
             .wireTap("direct:increment-hit-count")
