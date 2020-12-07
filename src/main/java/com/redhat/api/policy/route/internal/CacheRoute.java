@@ -2,14 +2,10 @@ package com.redhat.api.policy.route.internal;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import com.redhat.api.policy.configuration.PolicyConfig;
 import com.redhat.api.policy.configuration.SSLProxyConfig;
 import com.redhat.api.policy.enumerator.ApplicationEnum;
 import com.redhat.api.policy.exception.RateLimitException;
 import com.redhat.api.policy.processor.*;
-
-import com.redhat.api.policy.route.external.ProxyRoute;
 import org.apache.camel.Exchange;
 import org.apache.camel.LoggingLevel;
 import org.apache.camel.Message;
@@ -37,7 +33,7 @@ public class CacheRoute extends RouteBuilder {
     private SSLProxyConfig proxyConfig;
 
     @Autowired
-    private PolicyConfig policyConfig;
+    private JaegerProcessor jaeger;
 
     @Override
     public void configure() throws Exception {
@@ -58,6 +54,8 @@ public class CacheRoute extends RouteBuilder {
             .doCatch(Exception.class)
                 .log(":: Exception :: direct:policy :: infinispan service unavailable")
             .end()
+
+            .process(jaeger.withTag("xpto", "blah"))
 
             .doTry()
                 .process(rateLimitProcessor)

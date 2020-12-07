@@ -7,6 +7,7 @@ import com.redhat.api.policy.configuration.PolicyConfig;
 import com.redhat.api.policy.configuration.SSLProxyConfig;
 import com.redhat.api.policy.enumerator.ApplicationEnum;
 import com.redhat.api.policy.exception.RateLimitException;
+import com.redhat.api.policy.processor.JaegerProcessor;
 import org.apache.camel.Exchange;
 import org.apache.camel.LoggingLevel;
 import org.apache.camel.Message;

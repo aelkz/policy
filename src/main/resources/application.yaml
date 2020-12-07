@@ -81,6 +81,8 @@ opentracing:
     http-sender:
       url: ${OPENSHIFT_JAEGER_HTTP_SENDER_URI:http://localhost:14268/api/traces}
     expand-exception-logs: true
+    probabilistic-sampler:
+      sampling-rate: 1
     remote-reporter:
       max-queue-size: ${OPENSHIFT_JAEGER_REPORTER_QUEUE_SIZE:5}
       flush-interval: ${OPENSHIFT_JAEGER_REPORTER_FLUSH_INTERVAL:5}
