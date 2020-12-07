@@ -20,8 +20,8 @@ public class SSLProxyConfig {
     private String httpPort;
     @Value("${custom.proxy.https-port}")
     private String httpsPort;
-    @Value("${custom.proxy.debug-headers}")
-    private String debugHeaders;
+    @Value("${custom.proxy.debug}")
+    private String debug;
 
     public String getKeystoreDest() {
         return keystoreDest;
@@ -79,11 +79,15 @@ public class SSLProxyConfig {
         this.producerQuery = producerQuery;
     }
 
-    public String getDebugHeaders() {
-        return debugHeaders;
+    public Boolean debug() {
+        return Boolean.valueOf(debug);
     }
 
-    public void setDebugHeaders(String debugHeaders) {
-        this.debugHeaders = debugHeaders;
+    public String getDebug() {
+        return debug;
+    }
+
+    public void setDebug(String debug) {
+        this.debug = debug;
     }
 }

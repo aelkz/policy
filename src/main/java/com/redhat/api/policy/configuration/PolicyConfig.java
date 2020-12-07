@@ -18,6 +18,9 @@ public class PolicyConfig {
     @Value("${custom.policy.ip-rate-limit.x-forwarded-for}")
     private String xForwardedFor;
 
+    @Value("${custom.policy.ip-rate-limit.debug}")
+    private String debug;
+
     public Integer getMaxHitCount() {
         return maxHitCount;
     }
@@ -40,6 +43,18 @@ public class PolicyConfig {
 
     public void setxForwardedFor(String xForwardedFor) {
         this.xForwardedFor = xForwardedFor;
+    }
+
+    public Boolean debug() {
+        return Boolean.valueOf(debug);
+    }
+
+    public String getDebug() {
+        return debug;
+    }
+
+    public void setDebug(String debug) {
+        this.debug = debug;
     }
 }
 

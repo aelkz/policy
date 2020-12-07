@@ -1,7 +1,6 @@
 package com.redhat.api.policy.processor;
 
 import com.redhat.api.policy.configuration.PolicyConfig;
-import com.redhat.api.policy.configuration.SSLProxyConfig;
 import com.redhat.api.policy.enumerator.ApplicationEnum;
 import com.redhat.api.policy.exception.RateLimitException;
 import org.apache.camel.Exchange;
@@ -9,17 +8,12 @@ import org.apache.camel.Message;
 import org.apache.camel.Processor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
-
-import java.time.Instant;
 import java.util.logging.Logger;
 
 @Component
 public class DebugRateLimitProcessor implements Processor {
 
     private static final Logger LOGGER = Logger.getLogger(DebugRateLimitProcessor.class.getName());
-
-    @Autowired
-    private SSLProxyConfig proxyConfig;
 
     @Autowired
     private PolicyConfig policyConfig;
@@ -40,7 +34,6 @@ public class DebugRateLimitProcessor implements Processor {
             hits = maxPolicyHits;
         }
         message.setHeader("X-RateLimit-Remaining", hits);
-
         message.setHeader("X-RateLimit-Time", System.currentTimeMillis());
 
         // last 429 timestamp hit + refresh time window

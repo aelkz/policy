@@ -126,7 +126,7 @@ custom:
       #pass: ${FUSE_PROXY_KEYSTORE_PASSWORD:49CNOIPBvFh6b9yKpzK9PKCr1}
       dest: ${FUSE_PROXY_KEYSTORE_DESTINATION:}
       pass: ${FUSE_PROXY_KEYSTORE_PASSWORD:}
-    debug-headers: ${FUSE_PROXY_DEBUG_HEADERS:true}
+    debug: ${FUSE_PROXY_DEBUG:true}
   policy:
     ip-rate-limit:
       max-hit-count: ${POLICY_IP_RATE_LIMIT_MAX_HIT_COUNT:10}
@@ -135,3 +135,4 @@ custom:
       time-window: ${POLICY_IP_RATE_LIMIT_TIME_WINDOW:60000}
       x-forwarded-for: ${POLICY_IP_RATE_LIMIT_X_FORWARDED_FOR:10.6.128.23,200.164.107.55}
       white-list-ips: ${POLICY_IP_RATE_LIMIT_WHITE_LIST_IPS:}
+      debug: ${FUSE_POLICY_DEBUG:true}

@@ -14,25 +14,14 @@
         <java.version>1.8</java.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
-        <!-- ###################################################################### -->
-        <!-- LATEST FUSE RELEASE= 7.7.0.fuse-770012-redhat-00003                    -->
-        <!-- ###################################################################### -->
-        <!-- will expose:
-            http://localhost:8090/metrics/
-            http://localhost:8090/trace
-            http://localhost:8090/beans
-            http://localhost:8090/camel/health/check
-        -->
         <fuse.bom.version>7.7.0.fuse-770012-redhat-00003</fuse.bom.version>
-        <version.springboot>1.5.22.RELEASE</version.springboot>
+        <version.springboot>2.1.6.RELEASE</version.springboot>
         <!-- prometheus -->
         <version.micrometer>1.5.6</version.micrometer>
-        <!-- -->
         <maven.compiler.plugin.version>3.8.1</maven.compiler.plugin.version>
         <maven.min.version>3.5.4</maven.min.version>
         <maven.compiler.source>1.8</maven.compiler.source>
         <maven.compiler.target>1.8</maven.compiler.target>
-        <!-- -->
         <!-- nexus -->
         <nexusReleaseRepoUrl></nexusReleaseRepoUrl>
         <nexusSnapshotRepoUrl></nexusSnapshotRepoUrl>
@@ -55,6 +44,13 @@
                 <groupId>org.jboss.redhat-fuse</groupId>
                 <artifactId>fuse-springboot-bom</artifactId>
                 <version>${fuse.bom.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+            <dependency>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-dependencies</artifactId>
+                <version>${version.springboot}</version>
                 <type>pom</type>
                 <scope>import</scope>
             </dependency>
@@ -102,9 +98,7 @@
             <artifactId>jackson-datatype-jsr310</artifactId>
         </dependency>
 
-        <!-- --------------------------------------------- -->
-        <!-- OPEN TRACING                                  -->
-        <!-- --------------------------------------------- -->
+        <!-- OPEN TRACING =================================================== -->
         <!-- camel+spring -->
         <dependency>
             <groupId>org.apache.camel</groupId>

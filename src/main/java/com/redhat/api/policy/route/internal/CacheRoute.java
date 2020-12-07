@@ -55,12 +55,12 @@ public class CacheRoute extends RouteBuilder {
                 .log(":: Exception :: direct:policy :: infinispan service unavailable")
             .end()
 
-            .process(jaeger.withTag("xpto", "blah"))
+            .process(jaeger.withTag("X-Forwaded-For", "0.0.0.0", "remoteAddress"))
 
             .doTry()
                 .process(rateLimitProcessor)
                 .choice()
-                    .when(constant(Boolean.TRUE).isEqualTo(Boolean.valueOf(proxyConfig.getDebugHeaders())))
+                    .when(constant(Boolean.TRUE).isEqualTo(proxyConfig.debug()))
                     .process(debugRateLimitProcessor)
                 .endChoice()
                 .end()
@@ -69,7 +69,7 @@ public class CacheRoute extends RouteBuilder {
                 .log(LoggingLevel.ERROR, LOGGER, ":: RateLimitException trowed")
                 .wireTap("direct:increment-hit-count")
                 .choice()
-                    .when(constant(Boolean.TRUE).isEqualTo(Boolean.valueOf(proxyConfig.getDebugHeaders())))
+                    .when(constant(Boolean.TRUE).isEqualTo(proxyConfig.debug()))
                     .process(debugRateLimitProcessor)
                 .endChoice()
                 .end()
