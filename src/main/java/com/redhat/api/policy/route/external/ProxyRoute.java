@@ -8,6 +8,7 @@ import com.redhat.api.policy.configuration.SSLProxyConfig;
 import com.redhat.api.policy.enumerator.ApplicationEnum;
 import com.redhat.api.policy.exception.RateLimitException;
 import com.redhat.api.policy.processor.JaegerProcessor;
+import com.redhat.api.policy.processor.TracingDebugProcessor;
 import org.apache.camel.Exchange;
 import org.apache.camel.LoggingLevel;
 import org.apache.camel.Message;
@@ -34,6 +35,9 @@ public class ProxyRoute extends RouteBuilder {
 
     @Autowired
     private SSLProxyConfig proxyConfig;
+
+    @Autowired
+    private TracingDebugProcessor tracingDebug;
 
     @Override
     public void configure() throws Exception {
@@ -84,6 +88,7 @@ public class ProxyRoute extends RouteBuilder {
          * 3- Exception (upstream unavailable)
          */
         from("direct:internal-redirect")
+            .process(tracingDebug)
             .process(ProxyRoute::remoteAddressFilter)
             .to("direct:policy")
             .wireTap("direct:increment-hit-count")
