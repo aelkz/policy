@@ -6,8 +6,6 @@ import java.util.Arrays;
 import com.redhat.api.policy.configuration.PolicyConfig;
 import com.redhat.api.policy.configuration.SSLProxyConfig;
 import com.redhat.api.policy.enumerator.ApplicationEnum;
-import com.redhat.api.policy.exception.RateLimitException;
-import com.redhat.api.policy.processor.JaegerProcessor;
 import com.redhat.api.policy.processor.TracingDebugProcessor;
 import org.apache.camel.Exchange;
 import org.apache.camel.LoggingLevel;

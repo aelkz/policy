@@ -61,9 +61,7 @@ public class JaegerProcessor implements Processor {
         if (proxyConfig.debug()) {
             System.out.println("\n");
             exchange.getIn().getHeaders().forEach((k, v) -> {
-                if (k.startsWith("X-")) {
-                    System.out.println(k + " : " + v);
-                }
+                System.out.println(k + " : " + v);
             });
             System.out.println("\n");
         }
