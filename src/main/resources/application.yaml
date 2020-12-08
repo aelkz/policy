@@ -74,7 +74,7 @@ opentracing:
   jaeger:
     enabled: true
     service-name: ${OPENSHIFT_APP_NAME:3scale-proxy-policy}
-    enable-b3-propagation: true
+    enable-b3-propagation: ${OPENSHIFT_JAEGER_B3_PROPAGATION:false}
     log-spans: true
     const-sampler:
       decision: true
