@@ -43,23 +43,25 @@ public class RateLimitStorageProcessor implements Processor {
 
         long boundary = record.getTimeStamp() - policyConfig.getTimeWindow();
 
-        long millis = boundary;
-        LocalDateTime triggerTime = null;
-        triggerTime =
-                LocalDateTime.ofInstant(Instant.ofEpochMilli(millis),
-                        TimeZone.getDefault().toZoneId());
-        System.out.println();
-        System.out.println("boundary");
-        System.out.println("\t"+millis);
-        System.out.println("\t"+triggerTime);
-        millis = record.getTimeStamp();
-        triggerTime =
-                LocalDateTime.ofInstant(Instant.ofEpochMilli(millis),
-                        TimeZone.getDefault().toZoneId());
-        System.out.println("record.getTimeStamp()");
-        System.out.println("\t"+millis);
-        System.out.println("\t"+triggerTime);
-        System.out.println();
+        if (policyConfig.debug()) {
+            long millis = boundary;
+            LocalDateTime triggerTime = null;
+            triggerTime =
+                    LocalDateTime.ofInstant(Instant.ofEpochMilli(millis),
+                            TimeZone.getDefault().toZoneId());
+            System.out.println();
+            System.out.println("boundary");
+            System.out.println("\t" + millis);
+            System.out.println("\t" + triggerTime);
+            millis = record.getTimeStamp();
+            triggerTime =
+                    LocalDateTime.ofInstant(Instant.ofEpochMilli(millis),
+                            TimeZone.getDefault().toZoneId());
+            System.out.println("record.getTimeStamp()");
+            System.out.println("\t" + millis);
+            System.out.println("\t" + triggerTime);
+            System.out.println();
+        }
 
         synchronized (entry.getTimestampRecords()) {
             if (record.getHitCount() >= policyConfig.getMaxHitCount()) {

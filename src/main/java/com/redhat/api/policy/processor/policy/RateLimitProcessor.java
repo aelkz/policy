@@ -39,7 +39,7 @@ public class RateLimitProcessor implements Processor {
 
                 throw new RateLimitException(record.getIp());
             }
-        // catch (Excption e) {} -> block not allowed here!
+        // catch (RateLimitException e) {} -> block not allowed here!
         } finally {
             record.increase();
             long boundary = record.getTimeStamp() - policyConfig.getTimeWindow();

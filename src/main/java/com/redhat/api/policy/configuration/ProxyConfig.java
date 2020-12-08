@@ -22,6 +22,8 @@ public class ProxyConfig {
     private String httpsPort;
     @Value("${custom.proxy.debug}")
     private String debug;
+    @Value("${custom.proxy.skip-ssl-verification}")
+    private String skipSSLVerification;
 
     public String getKeystoreDest() {
         return keystoreDest;
@@ -89,5 +91,17 @@ public class ProxyConfig {
 
     public void setDebug(String debug) {
         this.debug = debug;
+    }
+
+    public Boolean skipSSLVerification() {
+        return Boolean.valueOf(getSkipSSLVerification());
+    }
+
+    public String getSkipSSLVerification() {
+        return skipSSLVerification;
+    }
+
+    public void setSkipSSLVerification(String skipSSLVerification) {
+        this.skipSSLVerification = skipSSLVerification;
     }
 }

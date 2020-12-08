@@ -1,11 +1,14 @@
 package com.redhat.api.policy.route.external;
 
+import java.io.InputStream;
+import java.security.KeyStore;
 import java.util.ArrayList;
 import java.util.Arrays;
 import com.redhat.api.policy.configuration.PolicyConfig;
 import com.redhat.api.policy.configuration.ProxyConfig;
 import com.redhat.api.policy.enumerator.ApplicationEnum;
 import com.redhat.api.policy.processor.debug.HeadersDebugProcessor;
+import com.redhat.api.policy.route.internal.CustomX509TrustManager;
 import org.apache.camel.Exchange;
 import org.apache.camel.LoggingLevel;
 import org.apache.camel.Message;
@@ -123,6 +126,19 @@ public class ProxyRoute extends RouteBuilder {
 
         TrustManagersParameters trustManagersParameters = new TrustManagersParameters();
         trustManagersParameters.setKeyStore(ksp);
+
+        if (proxyConfig.skipSSLVerification()) {
+            try(InputStream is = CustomX509TrustManager.class.getResourceAsStream(proxyConfig.getKeystoreDest())) {
+                KeyStore ks = KeyStore.getInstance(KeyStore.getDefaultType());
+                ks.load(is, ksp.getPassword().toCharArray());
+                CustomX509TrustManager customX509TrustManager = new CustomX509TrustManager(ks, proxyConfig.getKeystoreDest(), proxyConfig.getKeystorePass());
+                trustManagersParameters.setTrustManager(customX509TrustManager);
+            }catch (Exception ex) {
+                LOGGER.error(":: skipSSLVerification error");
+                LOGGER.error("\t:: " + ex.getMessage());
+                LOGGER.error("\t:: " + ex.getLocalizedMessage());
+            }
+        }
 
         SSLContextParameters scp = new SSLContextParameters();
         scp.setKeyManagers(keyManagersParameters);

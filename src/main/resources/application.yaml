@@ -110,7 +110,8 @@ custom:
     producer: ${FUSE_PROXY_PRODUCER_COMPONENT:http4}
     https-port: ${FUSE_PROXY_HTTP_PORT:8443}
     http-port: ${FUSE_PROXY_HTTPS_PORT:8080}
-    producer-query: ${FUSE_PRODUCER_QUERY:?connectionClose=false&bridgeEndpoint=true&copyHeaders=true}
+    producer-query: ${FUSE_PROXY_PRODUCER_QUERY:?connectionClose=false&bridgeEndpoint=true&copyHeaders=true}
+    skip-ssl-verification: ${FUSE_PROXY_SKIP_SSL_VERIFICATION:false}
     keystore:
       #dest: ${FUSE_PROXY_KEYSTORE_DESTINATION:/deployments/data/keystore.jks}
       #pass: ${FUSE_PROXY_KEYSTORE_PASSWORD:49CNOIPBvFh6b9yKpzK9PKCr1}
@@ -119,10 +120,10 @@ custom:
     debug: ${FUSE_PROXY_DEBUG:true}
   policy:
     ip-rate-limit:
-      max-hit-count: ${POLICY_IP_RATE_LIMIT_MAX_HIT_COUNT:10}
+      max-hit-count: ${FUSE_POLICY_IP_RATE_LIMIT_MAX_HIT_COUNT:10}
       # milliseconds time window for external requests
       # 1 minute = 60s = 60000ms
-      time-window: ${POLICY_IP_RATE_LIMIT_TIME_WINDOW:60000}
-      x-forwarded-for: ${POLICY_IP_RATE_LIMIT_X_FORWARDED_FOR:10.6.128.23,200.164.107.55}
-      white-list-ips: ${POLICY_IP_RATE_LIMIT_WHITE_LIST_IPS:}
+      time-window: ${FUSE_POLICY_IP_RATE_LIMIT_TIME_WINDOW:60000}
+      x-forwarded-for: ${FUSE_POLICY_IP_RATE_LIMIT_X_FORWARDED_FOR:10.6.128.23,200.164.107.55}
+      white-list-ips: ${FUSE_POLICY_IP_RATE_LIMIT_WHITE_LIST_IPS:}
       debug: ${FUSE_POLICY_DEBUG:true}

@@ -176,7 +176,7 @@ oc rollout pause dc ${APP} -n ${MSA_PROJECT_NAMESPACE}
 oc create configmap policy-api-keystore-config --from-file=./keystore.jks -n ${MSA_PROJECT_NAMESPACE}
 oc set volume dc/${APP} --add --overwrite --name=policy-api-config-volume -m /deployments/data -t configmap --configmap-name=policy-api-keystore-config -n ${MSA_PROJECT_NAMESPACE}
 oc set env dc/${APP} --overwrite FUSE_PROXY_KEYSTORE_PASSWORD=${KEYSTORE_PASSWORD} -n ${MSA_PROJECT_NAMESPACE}
-oc set env dc/${APP} --overwrite FUSE_PROXY_KEYSTORE_DESTINATION=/deployments/data/keystore.jks  -n ${MSA_PROJECT_NAMESPACE}
+oc set env dc/${APP} --overwrite FUSE_PROXY_KEYSTORE_DESTINATION=/deployments/data/keystore.jks -n ${MSA_PROJECT_NAMESPACE}
 
 oc set env dc/${APP} --overwrite OPENSHIFT_APP_NAME=${APP} -n ${MSA_PROJECT_NAMESPACE}
 oc set env dc/${APP} --overwrite OPENSHIFT_HOST_NAME=${OCP_DOMAIN} -n ${MSA_PROJECT_NAMESPACE}
@@ -189,10 +189,10 @@ oc set env dc/${APP} --overwrite OPENSHIFT_JAEGER_B3_PROPAGATION=false -n ${MSA_
 oc set env dc/${APP} --overwrite FUSE_PROXY_DEBUG=true -n ${MSA_PROJECT_NAMESPACE}
 oc set env dc/${APP} --overwrite FUSE_POLICY_DEBUG=true -n ${MSA_PROJECT_NAMESPACE}
 
-oc set env dc/${APP} --overwrite POLICY_IP_RATE_LIMIT_MAX_HIT_COUNT=10 -n ${MSA_PROJECT_NAMESPACE}
-oc set env dc/${APP} --overwrite POLICY_IP_RATE_LIMIT_TIME_WINDOW=60000 -n ${MSA_PROJECT_NAMESPACE}
-oc set env dc/${APP} --overwrite POLICY_IP_RATE_LIMIT_X_FORWARDED_FOR="10.6.128.23,200.164.107.55" -n ${MSA_PROJECT_NAMESPACE}
-oc set env dc/${APP} --overwrite POLICY_IP_RATE_LIMIT_WHITE_LIST_IPS= -n ${MSA_PROJECT_NAMESPACE}
+oc set env dc/${APP} --overwrite FUSE_POLICY_IP_RATE_LIMIT_MAX_HIT_COUNT=10 -n ${MSA_PROJECT_NAMESPACE}
+oc set env dc/${APP} --overwrite FUSE_POLICY_IP_RATE_LIMIT_TIME_WINDOW=60000 -n ${MSA_PROJECT_NAMESPACE}
+oc set env dc/${APP} --overwrite FUSE_POLICY_IP_RATE_LIMIT_X_FORWARDED_FOR="10.6.128.23,200.164.107.55" -n ${MSA_PROJECT_NAMESPACE}
+oc set env dc/${APP} --overwrite FUSE_POLICY_IP_RATE_LIMIT_WHITE_LIST_IPS= -n ${MSA_PROJECT_NAMESPACE}
 
 oc rollout resume dc ${APP} -n ${MSA_PROJECT_NAMESPACE}
 
