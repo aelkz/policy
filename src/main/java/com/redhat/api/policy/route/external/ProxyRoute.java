@@ -2,12 +2,10 @@ package com.redhat.api.policy.route.external;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-
 import com.redhat.api.policy.configuration.PolicyConfig;
 import com.redhat.api.policy.configuration.SSLProxyConfig;
 import com.redhat.api.policy.enumerator.ApplicationEnum;
 import com.redhat.api.policy.processor.HeadersDebugProcessor;
-import com.redhat.api.policy.processor.TracingDebugProcessor;
 import org.apache.camel.Exchange;
 import org.apache.camel.LoggingLevel;
 import org.apache.camel.Message;
@@ -34,9 +32,6 @@ public class ProxyRoute extends RouteBuilder {
 
     @Autowired
     private SSLProxyConfig proxyConfig;
-
-    @Autowired
-    private TracingDebugProcessor tracingDebug;
 
     @Autowired
     private HeadersDebugProcessor headersDebug;
@@ -72,7 +67,9 @@ public class ProxyRoute extends RouteBuilder {
                 .log(":: "+ proxyConfig.getConsumer() + " http headers:");
         }
 
-        from.process(headersDebug);
+        if (proxyConfig.debug()) {
+            from.process(headersDebug);
+        }
 
         if (policyConfig.getxForwardedFor() != null && !"".equals(policyConfig.getxForwardedFor().trim())) {
             ArrayList<String> ipList = new ArrayList<String>();
@@ -86,14 +83,17 @@ public class ProxyRoute extends RouteBuilder {
         }
 
         /**
-         * Known exceptions:
+         * known exceptions:
          * 1- RateLimitException
          * 2- Exception (infinispan unavailable)
          * 3- Exception (upstream unavailable)
          */
         from("direct:internal-redirect")
-            .process(headersDebug)
-            //.process(tracingDebug)
+            .choice()
+                .when(constant(Boolean.TRUE).isEqualTo(proxyConfig.debug()))
+                .process(headersDebug)
+            .endChoice()
+            .end()
             .process(ProxyRoute::remoteAddressFilter)
             .to("direct:policy")
             .wireTap("direct:increment-hit-count")

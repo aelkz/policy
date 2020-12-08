@@ -11,5 +11,4 @@
 5. concat de ips do metodo ipfilter c.r.a.p.route.external.ProxyRoute - clientIp "10.6.128.23:200.164.107.55":
 6. Após o período de refresh, o cliente sempre recebe o erro 429 na primeira requisição. As demais são processadas normalmente
 7. O cliente não pode ficar chamando sempre quando houver 429, pois o cache nunca será esvaziado. O cliente precisa interromper o consumo pelo período estipulado da janela
-
-8. max-idle da entry do cache
+8. max-idle da entry do cache para evitar consumo lazy do primeiro request após janela de tempo ter sido liberada para o cliente
