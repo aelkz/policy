@@ -93,7 +93,7 @@ public class ProxyRoute extends RouteBuilder {
          */
         from("direct:internal-redirect")
             .process(headersDebug)
-            .process(tracingDebug)
+            //.process(tracingDebug)
             .process(ProxyRoute::remoteAddressFilter)
             .to("direct:policy")
             .wireTap("direct:increment-hit-count")
