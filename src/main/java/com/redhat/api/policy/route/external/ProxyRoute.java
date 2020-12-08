@@ -8,7 +8,7 @@ import com.redhat.api.policy.configuration.PolicyConfig;
 import com.redhat.api.policy.configuration.ProxyConfig;
 import com.redhat.api.policy.enumerator.ApplicationEnum;
 import com.redhat.api.policy.processor.debug.HeadersDebugProcessor;
-import com.redhat.api.policy.route.internal.CustomX509TrustManager;
+import com.redhat.api.policy.ssl.CustomX509TrustManager;
 import org.apache.camel.Exchange;
 import org.apache.camel.LoggingLevel;
 import org.apache.camel.Message;
@@ -134,7 +134,7 @@ public class ProxyRoute extends RouteBuilder {
                 CustomX509TrustManager customX509TrustManager = new CustomX509TrustManager(ks, proxyConfig.getKeystoreDest(), proxyConfig.getKeystorePass());
                 trustManagersParameters.setTrustManager(customX509TrustManager);
             }catch (Exception ex) {
-                LOGGER.error(":: skipSSLVerification error");
+                LOGGER.error(":: skipSSLVerification error:");
                 LOGGER.error("\t:: " + ex.getMessage());
                 LOGGER.error("\t:: " + ex.getLocalizedMessage());
             }

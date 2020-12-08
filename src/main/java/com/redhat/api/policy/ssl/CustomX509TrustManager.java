@@ -1,4 +1,4 @@
-package com.redhat.api.policy.route.internal;
+package com.redhat.api.policy.ssl;
 
 import javax.net.ssl.TrustManager;
 import javax.net.ssl.TrustManagerFactory;

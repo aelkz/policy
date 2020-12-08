@@ -177,6 +177,7 @@ oc create configmap policy-api-keystore-config --from-file=./keystore.jks -n ${M
 oc set volume dc/${APP} --add --overwrite --name=policy-api-config-volume -m /deployments/data -t configmap --configmap-name=policy-api-keystore-config -n ${MSA_PROJECT_NAMESPACE}
 oc set env dc/${APP} --overwrite FUSE_PROXY_KEYSTORE_PASSWORD=${KEYSTORE_PASSWORD} -n ${MSA_PROJECT_NAMESPACE}
 oc set env dc/${APP} --overwrite FUSE_PROXY_KEYSTORE_DESTINATION=/deployments/data/keystore.jks -n ${MSA_PROJECT_NAMESPACE}
+oc set env dc/${APP} --overwrite FUSE_PROXY_SKIP_SSL_VERIFICATION=true -n ${MSA_PROJECT_NAMESPACE} # if you want bypass ssl verification (testing environments)
 
 oc set env dc/${APP} --overwrite OPENSHIFT_APP_NAME=${APP} -n ${MSA_PROJECT_NAMESPACE}
 oc set env dc/${APP} --overwrite OPENSHIFT_HOST_NAME=${OCP_DOMAIN} -n ${MSA_PROJECT_NAMESPACE}
