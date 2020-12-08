@@ -1,4 +1,4 @@
-package com.redhat.api.policy.processor;
+package com.redhat.api.policy.processor.policy;
 
 import java.time.Instant;
 import java.time.LocalDateTime;

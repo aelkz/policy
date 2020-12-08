@@ -5,7 +5,7 @@ import java.util.Arrays;
 import com.redhat.api.policy.configuration.PolicyConfig;
 import com.redhat.api.policy.configuration.SSLProxyConfig;
 import com.redhat.api.policy.enumerator.ApplicationEnum;
-import com.redhat.api.policy.processor.HeadersDebugProcessor;
+import com.redhat.api.policy.processor.debug.HeadersDebugProcessor;
 import org.apache.camel.Exchange;
 import org.apache.camel.LoggingLevel;
 import org.apache.camel.Message;

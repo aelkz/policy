@@ -1,32 +1,23 @@
-package com.redhat.api.policy.processor;
+package com.redhat.api.policy.processor.tracing;
 
-import com.redhat.api.policy.configuration.PolicyConfig;
 import com.redhat.api.policy.configuration.SSLProxyConfig;
-import io.jaegertracing.Configuration;
-import io.jaegertracing.internal.JaegerTracer;
-import io.opentracing.Scope;
 import io.opentracing.Span;
 import io.opentracing.SpanContext;
-import io.opentracing.Tracer;
 import io.opentracing.propagation.Format;
 import io.opentracing.propagation.TextMapAdapter;
-import io.opentracing.propagation.TextMapExtractAdapter;
-import io.opentracing.tag.Tags;
-import io.opentracing.util.GlobalTracer;
 import org.apache.camel.Exchange;
 import org.apache.camel.Processor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
-import java.util.HashMap;
+
 import java.util.Map;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
-import io.opentracing.propagation.TextMap;
 
 @Component
-public class JaegerProcessor implements Processor {
+public class SpanProcessor implements Processor {
 
-    private static final Logger LOGGER = Logger.getLogger(JaegerProcessor.class.getName());
+    private static final Logger LOGGER = Logger.getLogger(SpanProcessor.class.getName());
 
     @Autowired
     private SSLProxyConfig proxyConfig;
@@ -38,9 +29,9 @@ public class JaegerProcessor implements Processor {
     private String value;
     private String operation; // TODO - change String.class to Expression.class
 
-    public JaegerProcessor() { }
+    public SpanProcessor() { }
 
-    public JaegerProcessor withTag(String tag, String value) {
+    public SpanProcessor withTag(String tag, String value) {
         this.tag = tag;
         this.value = value;
         this.operation = tag;
@@ -48,7 +39,7 @@ public class JaegerProcessor implements Processor {
         return this;
     }
 
-    public JaegerProcessor withTag(String tag, String value, String operation) {
+    public SpanProcessor withTag(String tag, String value, String operation) {
         this.tag = tag;
         this.value = value;
         this.operation = operation;
@@ -71,9 +62,11 @@ public class JaegerProcessor implements Processor {
             .collect(Collectors.toMap(Map.Entry::getKey, e -> e.getValue()+"")); // alwyas add as String.class
 
         SpanContext parentSpan =
-                tracer.extract(Format.Builtin.HTTP_HEADERS, new TextMapAdapter(strMap));
+            tracer.extract(Format.Builtin.HTTP_HEADERS, new TextMapAdapter(strMap));
 
         Span childSpan = tracer.buildSpan(getTag()).asChildOf(parentSpan).start();
+        // valid: x.forwarded.for
+        // invalid: X-Forwarded-For
         childSpan.setTag(getTag(), getValue());
         childSpan.setOperationName(getOperation());
         childSpan.finish();

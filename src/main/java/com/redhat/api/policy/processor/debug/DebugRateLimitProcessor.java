@@ -1,4 +1,4 @@
-package com.redhat.api.policy.processor;
+package com.redhat.api.policy.processor.debug;
 
 import com.redhat.api.policy.configuration.PolicyConfig;
 import com.redhat.api.policy.enumerator.ApplicationEnum;

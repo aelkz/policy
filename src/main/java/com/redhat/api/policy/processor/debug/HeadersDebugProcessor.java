@@ -1,4 +1,4 @@
-package com.redhat.api.policy.processor;
+package com.redhat.api.policy.processor.debug;
 
 import com.redhat.api.policy.configuration.SSLProxyConfig;
 import org.apache.camel.Exchange;

@@ -1,11 +1,14 @@
 package com.redhat.api.policy.route.internal;
 
+import com.redhat.api.policy.processor.debug.DebugRateLimitProcessor;
+import com.redhat.api.policy.processor.policy.RateLimitProcessor;
+import com.redhat.api.policy.processor.policy.RateLimitStorageProcessor;
+import com.redhat.api.policy.processor.tracing.SpanProcessor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import com.redhat.api.policy.configuration.SSLProxyConfig;
 import com.redhat.api.policy.enumerator.ApplicationEnum;
 import com.redhat.api.policy.exception.RateLimitException;
-import com.redhat.api.policy.processor.*;
 import org.apache.camel.Exchange;
 import org.apache.camel.LoggingLevel;
 import org.apache.camel.Message;
@@ -33,7 +36,7 @@ public class CacheRoute extends RouteBuilder {
     private SSLProxyConfig proxyConfig;
 
     @Autowired
-    private JaegerProcessor jaeger;
+    private SpanProcessor span;
 
     @Override
     public void configure() throws Exception {
@@ -55,7 +58,7 @@ public class CacheRoute extends RouteBuilder {
                 .log(":: Exception :: direct:policy :: infinispan service unavailable")
             .end()
 
-            .process(jaeger.withTag("X-Forwaded-For", "0.0.0.0", "remoteAddress"))
+            .process(span.withTag("x.forwarded.for", "0.0.0.0", "remoteAddress"))
 
             .doTry()
                 .process(rateLimitProcessor)
@@ -89,7 +92,6 @@ public class CacheRoute extends RouteBuilder {
                     .process(rateLimitStorageProcessor)
                 .multicast().parallelProcessing()
                     .pipeline()
-                        // TODO - implementar condicional para evitar atualização sem necessidade
                         .setHeader(InfinispanConstants.OPERATION, constant(InfinispanOperation.PUT))
                         .setHeader(InfinispanConstants.KEY, simple("${exchangeProperty." + ApplicationEnum.CLIENT_IP.getValue() + "}-" + ApplicationEnum.HIT_TIMESTAMP.getValue()))
                         .setHeader(InfinispanConstants.VALUE, simple("${header." + ApplicationEnum.HIT_TIMESTAMP.getValue() + "}"))
