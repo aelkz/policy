@@ -11,14 +11,14 @@ import org.springframework.stereotype.Component;
 import java.util.logging.Logger;
 
 @Component
-public class DebugRateLimitProcessor implements Processor {
+public class RateLimitDebugProcessor implements Processor {
 
-    private static final Logger LOGGER = Logger.getLogger(DebugRateLimitProcessor.class.getName());
+    private static final Logger LOGGER = Logger.getLogger(RateLimitDebugProcessor.class.getName());
 
     @Autowired
     private PolicyConfig policyConfig;
 
-    public DebugRateLimitProcessor() { }
+    public RateLimitDebugProcessor() { }
 
     @Override
     public void process(Exchange exchange) throws RateLimitException {

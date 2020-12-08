@@ -1,6 +1,6 @@
 package com.redhat.api.policy.route.internal;
 
-import com.redhat.api.policy.processor.debug.DebugRateLimitProcessor;
+import com.redhat.api.policy.processor.debug.RateLimitDebugProcessor;
 import com.redhat.api.policy.processor.policy.RateLimitProcessor;
 import com.redhat.api.policy.processor.policy.RateLimitStorageProcessor;
 import com.redhat.api.policy.processor.tracing.SpanProcessor;
@@ -30,7 +30,7 @@ public class CacheRoute extends RouteBuilder {
     private RateLimitStorageProcessor rateLimitStorageProcessor;
 
     @Autowired
-    private DebugRateLimitProcessor debugRateLimitProcessor;
+    private RateLimitDebugProcessor debugRateLimitProcessor;
 
     @Autowired
     private SSLProxyConfig proxyConfig;
