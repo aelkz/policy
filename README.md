@@ -184,6 +184,8 @@ oc set env dc/${APP} --overwrite OPENSHIFT_HOST_NAME=${OCP_DOMAIN} -n ${MSA_PROJ
 
 oc set env dc/${APP} --overwrite INFINISPAN_HOTROD_HOST=datagrid-fuse-policy.microservices.svc.cluster.local -n ${MSA_PROJECT_NAMESPACE}
 
+oc set env dc/${APP} --overwrite OPENSHIFT_JAEGER_UDP_SENDER_HOST=jaeger-agent.microservices.svc.cluster.local -n ${MSA_PROJECT_NAMESPACE}
+oc set env dc/${APP} --overwrite OPENSHIFT_JAEGER_UDP_SENDER_PORT=6831 -n ${MSA_PROJECT_NAMESPACE}
 oc set env dc/${APP} --overwrite OPENSHIFT_JAEGER_HTTP_SENDER_URI=http://jaeger-collector.microservices.svc.cluster.local:14268/api/traces -n ${MSA_PROJECT_NAMESPACE}
 oc set env dc/${APP} --overwrite OPENSHIFT_JAEGER_B3_PROPAGATION=false -n ${MSA_PROJECT_NAMESPACE}
 
