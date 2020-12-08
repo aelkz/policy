@@ -2,8 +2,10 @@ package com.redhat.api.policy.processor;
 
 import com.redhat.api.policy.configuration.SSLProxyConfig;
 import io.opentracing.SpanContext;
+import io.opentracing.Tracer;
 import io.opentracing.propagation.Format;
 import io.opentracing.propagation.TextMapAdapter;
+import io.opentracing.tag.Tags;
 import org.apache.camel.Exchange;
 import org.apache.camel.Processor;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -38,11 +40,26 @@ public class TracingDebugProcessor implements Processor {
             System.out.println("\n");
         }
 
-        Map<String,String> strMap = exchange.getIn().getHeaders().entrySet().stream()
-            .filter(m -> m.getKey() != null && m.getValue() !=null)
-            .collect(Collectors.toMap(Map.Entry::getKey, e -> e.getValue()+"")); // always add as String.class
+        Tracer.SpanBuilder spanBuilder;
 
-        tracer.inject(tracer.activeSpan().context(), Format.Builtin.HTTP_HEADERS, new TextMapAdapter(strMap));
+        Map<String,String> strMap = exchange.getIn().getHeaders().entrySet().stream()
+                .filter(m -> m.getKey() != null && m.getValue() !=null)
+                .collect(Collectors.toMap(Map.Entry::getKey, e -> e.getValue()+"")); // alwyas add as String.class
+
+        try {
+            SpanContext parentSpanCtx =
+                tracer.extract(Format.Builtin.HTTP_HEADERS, new TextMapAdapter(strMap));
+
+            if (parentSpanCtx == null) {
+                spanBuilder = tracer.buildSpan("root-span");
+            } else {
+                spanBuilder = tracer.buildSpan("root-span").asChildOf(parentSpanCtx);
+            }
+        } catch (IllegalArgumentException e) {
+            spanBuilder = tracer.buildSpan("root-span");
+        }
+
+        spanBuilder.withTag(Tags.SPAN_KIND.getKey(), Tags.SPAN_KIND_SERVER).start();
 
         exchange.getOut().setHeaders(exchange.getIn().getHeaders());
         exchange.getOut().setBody(exchange.getIn().getBody());
