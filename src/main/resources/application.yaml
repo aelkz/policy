@@ -60,15 +60,6 @@ management:
 # =============================================
 # opentracing configurations
 # ---------------------------------------------
-# see:
-# https://github.com/opentracing-contrib/java-spring-jaeger/blob/master/README.md
-# https://medium.com/jaegertracing/help-something-is-wrong-with-my-jaeger-installation-68874395a7a6
-# https://medium.com/@krushnatkhawale/opentracing-using-jaeger-with-spring-boot-web-application-ceaf8dd99fe9
-# https://camel.apache.org/components/latest/others/opentracing.html
-# https://github.com/jaegertracing/jaeger-client-java/issues/607
-# https://grafana.com/blog/2020/07/09/where-did-all-my-spans-go-a-guide-to-diagnosing-dropped-spans-in-jaeger-distributed-tracing/
-# https://opentracing.io/guides/java/
-# ---------------------------------------------
 
 opentracing:
   jaeger:
@@ -106,7 +97,6 @@ infinispan:
       socket-timeout: ${INFINISPAN_HOTROD_SOCKET_TIMEOUT:3000}
       max-retries: ${INFINISPAN_HOTROD_MAX_RETRIES:2}
       trust-store-path: ${SERVICE_CA_PATH:/var/run/secrets/kubernetes.io/serviceaccount/service-ca.crt}
-      #host: ${INFINISPAN_APP_NAME:datagrid-fuse-policy}.${INFINISPAN_SERVICE_NAMESPACE:rh-datagrid-73}.svc
       host: ${INFINISPAN_HOTROD_HOST:localhost}
       port: ${INFINISPAN_HOTROD_PORT:11222}
       cache: ${INFINISPAN_CACHE:default}

@@ -78,3 +78,11 @@ https://github.com/jaegertracing/jaeger/issues/2121
 https://medium.com/jaegertracing/where-did-all-my-spans-go-a-guide-to-diagnosing-dropped-spans-in-jaeger-10d9697f8182
 https://www.jaegertracing.io/docs/1.20/performance-tuning/
 https://github.com/jaegertracing/jaeger/issues/1459
+
+https://github.com/opentracing-contrib/java-spring-jaeger/blob/master/README.md
+https://medium.com/jaegertracing/help-something-is-wrong-with-my-jaeger-installation-68874395a7a6
+https://medium.com/@krushnatkhawale/opentracing-using-jaeger-with-spring-boot-web-application-ceaf8dd99fe9
+https://camel.apache.org/components/latest/others/opentracing.html
+https://github.com/jaegertracing/jaeger-client-java/issues/607
+https://grafana.com/blog/2020/07/09/where-did-all-my-spans-go-a-guide-to-diagnosing-dropped-spans-in-jaeger-distributed-tracing/
+https://opentracing.io/guides/java/
