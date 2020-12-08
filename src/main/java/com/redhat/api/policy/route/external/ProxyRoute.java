@@ -3,7 +3,7 @@ package com.redhat.api.policy.route.external;
 import java.util.ArrayList;
 import java.util.Arrays;
 import com.redhat.api.policy.configuration.PolicyConfig;
-import com.redhat.api.policy.configuration.SSLProxyConfig;
+import com.redhat.api.policy.configuration.ProxyConfig;
 import com.redhat.api.policy.enumerator.ApplicationEnum;
 import com.redhat.api.policy.processor.debug.HeadersDebugProcessor;
 import org.apache.camel.Exchange;
@@ -31,7 +31,7 @@ public class ProxyRoute extends RouteBuilder {
     private PolicyConfig policyConfig;
 
     @Autowired
-    private SSLProxyConfig proxyConfig;
+    private ProxyConfig proxyConfig;
 
     @Autowired
     private HeadersDebugProcessor headersDebug;
@@ -163,9 +163,16 @@ public class ProxyRoute extends RouteBuilder {
 
     private static void serviceUnavailable(final Exchange exchange) {
         LOGGER.info(":: method: serviceUnavailable(final Exchange exchange) called");
-
         LOGGER.error("\t:: http.status.code=503");
+
         final Message message = exchange.getIn();
+
+        final Throwable ex = exchange.getProperty(Exchange.EXCEPTION_CAUGHT, Throwable.class);
+        if (ex != null) {
+            LOGGER.error(ex.getMessage());
+            LOGGER.error(ex.getLocalizedMessage());
+        }
+
         message.setFault(true);
         message.setHeader(Exchange.HTTP_RESPONSE_CODE, 503);
         message.setBody("");

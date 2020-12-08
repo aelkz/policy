@@ -6,7 +6,7 @@ import com.redhat.api.policy.processor.policy.RateLimitStorageProcessor;
 import com.redhat.api.policy.processor.tracing.SpanProcessor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import com.redhat.api.policy.configuration.SSLProxyConfig;
+import com.redhat.api.policy.configuration.ProxyConfig;
 import com.redhat.api.policy.enumerator.ApplicationEnum;
 import com.redhat.api.policy.exception.RateLimitException;
 import org.apache.camel.Exchange;
@@ -33,7 +33,7 @@ public class CacheRoute extends RouteBuilder {
     private RateLimitDebugProcessor debugRateLimitProcessor;
 
     @Autowired
-    private SSLProxyConfig proxyConfig;
+    private ProxyConfig proxyConfig;
 
     @Autowired
     private SpanProcessor span;

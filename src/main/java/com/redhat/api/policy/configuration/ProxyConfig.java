@@ -4,7 +4,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Configuration;
 
 @Configuration
-public class SSLProxyConfig {
+public class ProxyConfig {
 
     @Value("${custom.proxy.keystore.dest}")
     private String keystoreDest;

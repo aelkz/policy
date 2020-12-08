@@ -1,6 +1,6 @@
 package com.redhat.api.policy.processor.tracing;
 
-import com.redhat.api.policy.configuration.SSLProxyConfig;
+import com.redhat.api.policy.configuration.ProxyConfig;
 import io.opentracing.Span;
 import io.opentracing.SpanContext;
 import io.opentracing.propagation.Format;
@@ -20,7 +20,7 @@ public class SpanProcessor implements Processor {
     private static final Logger LOGGER = Logger.getLogger(SpanProcessor.class.getName());
 
     @Autowired
-    private SSLProxyConfig proxyConfig;
+    private ProxyConfig proxyConfig;
 
     @Autowired
     private io.opentracing.Tracer tracer;

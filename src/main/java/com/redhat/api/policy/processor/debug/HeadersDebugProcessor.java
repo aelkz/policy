@@ -1,6 +1,6 @@
 package com.redhat.api.policy.processor.debug;
 
-import com.redhat.api.policy.configuration.SSLProxyConfig;
+import com.redhat.api.policy.configuration.ProxyConfig;
 import org.apache.camel.Exchange;
 import org.apache.camel.Processor;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -15,7 +15,7 @@ public class HeadersDebugProcessor implements Processor {
     private static final Logger LOGGER = Logger.getLogger(HeadersDebugProcessor.class.getName());
 
     @Autowired
-    private SSLProxyConfig proxyConfig;
+    private ProxyConfig proxyConfig;
 
     public HeadersDebugProcessor() { }
 
