@@ -110,6 +110,8 @@ public class CacheRoute extends RouteBuilder {
                         .setHeader(InfinispanConstants.OPERATION, constant(InfinispanOperation.PUT))
                         .setHeader(InfinispanConstants.KEY, simple("${exchangeProperty." + ApplicationEnum.CLIENT_IP.getValue() + "}"))
                         .setHeader(InfinispanConstants.VALUE, simple("${exchangeProperty." + ApplicationEnum.HIT_COUNT_TOTAL.getValue() + "}"))
+                        .setHeader(InfinispanConstants.MAX_IDLE_TIME, constant(policyConfig.getTimeWindow()))
+                        .setHeader(InfinispanConstants.MAX_IDLE_TIME_UNIT, simple(TimeUnit.MILLISECONDS.toString()))
                             .log(":: infinispan :: PUT#02 :: " + "${exchangeProperty." + ApplicationEnum.CLIENT_IP.getValue() + "}")
                             .to("infinispan:{{infinispan.client.hotrod.cache}}?cacheContainer=#cacheContainer")
                     .end()
