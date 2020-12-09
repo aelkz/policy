@@ -39,7 +39,7 @@ public class RateLimitDebugProcessor implements Processor {
         // last 429 timestamp hit + refresh time window
         if (exchange.getProperty(ApplicationEnum.HIT_LAST_429_MILLIS.getValue()) != null) {
             long last429hitMillis = (Long) exchange.getProperty(ApplicationEnum.HIT_LAST_429_MILLIS.getValue());
-            long refreshMillis = last429hitMillis + policyConfig.getTimeWindow().longValue();
+            long refreshMillis = last429hitMillis + policyConfig.getTimeWindow();
 
             message.setHeader("X-RateLimit-Reset", refreshMillis);
         }

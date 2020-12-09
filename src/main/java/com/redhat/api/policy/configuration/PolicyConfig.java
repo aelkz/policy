@@ -13,7 +13,7 @@ public class PolicyConfig {
     private Integer maxHitCount;
 
     @Value("${custom.policy.ip-rate-limit.time-window}")
-    private Integer timeWindow;
+    private Long timeWindow;
 
     @Value("${custom.policy.ip-rate-limit.x-forwarded-for}")
     private String xForwardedFor;
@@ -29,11 +29,11 @@ public class PolicyConfig {
         this.maxHitCount = maxHitCount;
     }
 
-    public Integer getTimeWindow() {
+    public Long getTimeWindow() {
         return timeWindow;
     }
 
-    public void setTimeWindow(Integer timeWindow) {
+    public void setTimeWindow(Long timeWindow) {
         this.timeWindow = timeWindow;
     }
 

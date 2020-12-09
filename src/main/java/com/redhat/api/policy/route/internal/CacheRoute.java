@@ -1,5 +1,6 @@
 package com.redhat.api.policy.route.internal;
 
+import com.redhat.api.policy.configuration.PolicyConfig;
 import com.redhat.api.policy.processor.debug.RateLimitDebugProcessor;
 import com.redhat.api.policy.processor.policy.RateLimitProcessor;
 import com.redhat.api.policy.processor.policy.RateLimitStorageProcessor;
@@ -18,6 +19,8 @@ import org.apache.camel.component.infinispan.InfinispanOperation;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
+import java.util.concurrent.TimeUnit;
+
 @Component("policy-ip-rate-limit")
 public class CacheRoute extends RouteBuilder {
 
@@ -34,6 +37,9 @@ public class CacheRoute extends RouteBuilder {
 
     @Autowired
     private ProxyConfig proxyConfig;
+
+    @Autowired
+    private PolicyConfig policyConfig;
 
     @Autowired
     private SpanProcessor span;
@@ -95,6 +101,8 @@ public class CacheRoute extends RouteBuilder {
                         .setHeader(InfinispanConstants.OPERATION, constant(InfinispanOperation.PUT))
                         .setHeader(InfinispanConstants.KEY, simple("${exchangeProperty." + ApplicationEnum.CLIENT_IP.getValue() + "}-" + ApplicationEnum.HIT_TIMESTAMP.getValue()))
                         .setHeader(InfinispanConstants.VALUE, simple("${header." + ApplicationEnum.HIT_TIMESTAMP.getValue() + "}"))
+                        .setHeader(InfinispanConstants.MAX_IDLE_TIME, constant(policyConfig.getTimeWindow()))
+                        .setHeader(InfinispanConstants.MAX_IDLE_TIME_UNIT, simple(TimeUnit.MILLISECONDS.toString()))
                             .log(":: infinispan :: PUT#01 :: " + "${exchangeProperty." + ApplicationEnum.CLIENT_IP.getValue() + "}-" + ApplicationEnum.HIT_TIMESTAMP.getValue())
                             .to("infinispan:{{infinispan.client.hotrod.cache}}?cacheContainer=#cacheContainer")
                     .end()
